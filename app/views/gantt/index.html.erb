@@ -1,0 +1,44 @@
+<% content_for :head do %>
+  <%= stylesheet_link_tag "frappe-gantt" %>
+<% end %>
+
+<h1 class="text-2xl font-bold mb-6">Диаграмма Ганта — все проекты</h1>
+
+<% projects_with_tasks = @projects.select { |p| p.tasks.any? { |t| t.start_date.present? && t.due_date.present? } } %>
+
+<% if projects_with_tasks.empty? %>
+  <p class="text-gray-500">Нет проектов с задачами для отображения.</p>
+<% else %>
+  <%
+    gantt_tasks = projects_with_tasks.map do |project|
+      earliest_start = project.tasks.filter_map(&:start_date).min
+      latest_due = project.tasks.filter_map(&:due_date).max
+      completed = project.tasks.select(&:completed?).size
+      total = project.tasks.size
+      progress = total > 0 ? (completed.to_f / total * 100).round : 0
+
+      {
+        id: "project_#{project.id}",
+        name: project.name,
+        start: (earliest_start || Date.current).strftime("%Y-%m-%d"),
+        end: (latest_due || Date.current + 30.days).strftime("%Y-%m-%d"),
+        progress: progress,
+        dependencies: ""
+      }
+    end
+  %>
+
+  <div class="bg-white shadow rounded-lg p-4 overflow-x-auto"
+       data-controller="gantt"
+       data-gantt-tasks-value="<%= gantt_tasks.to_json %>">
+  </div>
+
+  <div class="mt-4">
+    <% projects_with_tasks.each do |project| %>
+      <div class="mb-2">
+        <%= link_to project.name, gantt_project_path(project), class: "text-indigo-600 hover:text-indigo-800" %>
+        <span class="text-sm text-gray-500">(<%= project.tasks.size %> задач)</span>
+      </div>
+    <% end %>
+  </div>
+<% end %>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "ProjectSystem" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center space-x-8">
+            <%= link_to "ProDesign", root_path, class: "text-xl font-bold text-indigo-600" %>
+            <% if user_signed_in? %>
+              <%= link_to "Проекты", projects_path, class: "text-gray-600 hover:text-gray-900" %>
+              <%= link_to "Планёр", planner_path, class: "text-gray-600 hover:text-gray-900" %>
+              <%= link_to "Производство", production_path, class: "text-gray-600 hover:text-gray-900" %>
+              <%= link_to "Гант", gantt_path, class: "text-gray-600 hover:text-gray-900" %>
+            <% end %>
+          </div>
+          <div class="flex items-center space-x-4">
+            <% if user_signed_in? %>
+              <span class="text-sm text-gray-500"><%= current_user.full_name %> (<%= current_user.role_name %>)</span>
+              <% if current_user.admin? || current_user.director? %>
+                <%= link_to "Пользователи", admin_users_path, class: "text-sm text-gray-600 hover:text-gray-900" %>
+              <% end %>
+              <%= button_to "Выйти", destroy_user_session_path, method: :delete, class: "text-sm text-red-600 hover:text-red-800" %>
+            <% else %>
+              <%= link_to "Войти", new_user_session_path, class: "text-sm text-indigo-600 hover:text-indigo-800" %>
+              <%= link_to "Регистрация", new_user_registration_path, class: "text-sm text-indigo-600 hover:text-indigo-800" %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <% if notice.present? %>
+        <div class="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-md">
+          <%= notice %>
+        </div>
+      <% end %>
+      <% if alert.present? %>
+        <div class="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md">
+          <%= alert %>
+        </div>
+      <% end %>
+
+      <%= yield %>
+    </div>
+  </body>
+</html>

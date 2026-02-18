@@ -1,0 +1,119 @@
+<div class="mb-4">
+  <%= link_to "&larr; Назад к #{@project.name}".html_safe, project_path(@project), class: "text-indigo-600 hover:text-indigo-800 text-sm" %>
+</div>
+
+<div class="bg-white shadow rounded-lg p-6">
+  <div class="flex justify-between items-start">
+    <div>
+      <h1 class="text-2xl font-bold">
+        <%= @task.title %>
+        <% if @task.overdue? %>
+          <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">Просрочена</span>
+        <% end %>
+      </h1>
+      <div class="mt-2 flex items-center space-x-4">
+        <%= render partial: "tasks/status_badge", locals: { status: @task.status } %>
+        <span class="text-sm text-gray-500">Автор: <%= @task.created_by.full_name %></span>
+      </div>
+    </div>
+    <div class="flex space-x-2">
+      <% if policy(@task).update? %>
+        <%= link_to "Редактировать", edit_project_task_path(@project, @task), class: "bg-gray-200 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-300 text-sm" %>
+      <% end %>
+    </div>
+  </div>
+
+  <% if @task.description.present? %>
+    <div class="mt-4 text-gray-700">
+      <p><%= @task.description %></p>
+    </div>
+  <% end %>
+
+  <div class="mt-6 grid grid-cols-2 gap-4 text-sm">
+    <div>
+      <span class="text-gray-500">Исполнитель:</span>
+      <span class="ml-2 font-medium"><%= @task.assignee&.full_name || "Не назначен" %></span>
+    </div>
+    <div>
+      <span class="text-gray-500">Согласовал:</span>
+      <span class="ml-2 font-medium"><%= @task.approved_by&.full_name || "—" %></span>
+    </div>
+    <div>
+      <span class="text-gray-500">Плановые сроки:</span>
+      <span class="ml-2 font-medium"><%= @task.preliminary_start_at&.strftime("%d.%m.%Y") %> — <%= @task.preliminary_due_at&.strftime("%d.%m.%Y") %></span>
+    </div>
+    <div>
+      <span class="text-gray-500">Согласованные сроки:</span>
+      <span class="ml-2 font-medium"><%= @task.approved_start_at&.strftime("%d.%m.%Y") || "—" %> — <%= @task.approved_due_at&.strftime("%d.%m.%Y") || "—" %></span>
+    </div>
+    <% if @task.completed_at %>
+      <div>
+        <span class="text-gray-500">Завершена:</span>
+        <span class="ml-2 font-medium"><%= @task.completed_at.strftime("%d.%m.%Y %H:%M") %></span>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @task.dependencies.any? %>
+    <div class="mt-4">
+      <span class="text-sm text-gray-500">Зависимости:</span>
+      <div class="mt-1 flex flex-wrap gap-2">
+        <% @task.dependencies.each do |dep| %>
+          <%= link_to dep.title, project_task_path(@project, dep), class: "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium #{dep.completed? ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}" %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="mt-6 flex flex-wrap gap-2 border-t pt-4">
+    <% if policy(@task).submit_for_approval? %>
+      <%= button_to "На согласование", submit_for_approval_project_task_path(@project, @task), method: :patch, class: "bg-yellow-500 text-white px-3 py-2 rounded-md hover:bg-yellow-600 text-sm" %>
+    <% end %>
+    <% if policy(@task).approve? %>
+      <%= button_to "Согласовать", approve_project_task_path(@project, @task), method: :patch, class: "bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 text-sm" %>
+    <% end %>
+    <% if policy(@task).reject? %>
+      <%= button_to "Отклонить", reject_project_task_path(@project, @task), method: :patch, class: "bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 text-sm" %>
+    <% end %>
+    <% if policy(@task).start? %>
+      <%= button_to "Начать", start_project_task_path(@project, @task), method: :patch, class: "bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 text-sm" %>
+    <% end %>
+    <% if policy(@task).complete? %>
+      <%= button_to "Завершить", complete_project_task_path(@project, @task), method: :patch, class: "bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 text-sm" %>
+    <% end %>
+    <% if policy(@task).assign? %>
+      <%= form_with(url: assign_project_task_path(@project, @task), method: :patch, class: "flex items-center space-x-2") do |f| %>
+        <%= f.select :assignee_id, User.all.map { |u| [u.full_name, u.id] }, { include_blank: "Выберите исполнителя" }, name: "task[assignee_id]", class: "rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 border text-sm" %>
+        <%= f.submit "Назначить", class: "bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700 text-sm cursor-pointer" %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<div class="mt-8">
+  <h2 class="text-lg font-semibold mb-4">Комментарии</h2>
+  <%= render partial: "comments/form", locals: { commentable: @task, url: project_task_comments_path(@project, @task) } %>
+  <div class="mt-4 space-y-4">
+    <% @task.comments.includes(:user).order(created_at: :desc).each do |comment| %>
+      <%= render partial: "comments/comment", locals: { comment: comment } %>
+    <% end %>
+  </div>
+</div>
+
+<div class="mt-8">
+  <h2 class="text-lg font-semibold mb-4">История изменений</h2>
+  <div class="space-y-2">
+    <% @task.audit_logs.includes(:user).order(created_at: :desc).each do |log| %>
+      <div class="text-sm text-gray-500">
+        <span class="font-medium text-gray-700"><%= log.user.full_name %></span>
+        <%= log.action %>
+        <span class="text-xs"><%= log.created_at.strftime("%d.%m.%Y %H:%M") %></span>
+        <% if log.changed_data.present? %>
+          <span class="text-xs text-gray-400">
+            (<%= log.changed_data.map { |k, v| "#{k}: #{v[0]} → #{v[1]}" }.join(", ") %>)
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>
