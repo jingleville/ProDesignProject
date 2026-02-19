@@ -6,13 +6,15 @@ class Admin::UsersController < ApplicationController
   before_action :set_user, only: [ :edit, :update ]
 
   def index
-    @users = User.order(:last_name, :first_name)
+    @users = policy_scope(User).order(:last_name, :first_name)
   end
 
   def edit
+    authorize @user
   end
 
   def update
+    authorize @user
     if @user.update(user_params)
       redirect_to admin_users_path, notice: "Роль пользователя #{@user.full_name} обновлена."
     else
