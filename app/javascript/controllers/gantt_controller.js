@@ -34,16 +34,31 @@ export default class extends Controller {
   }
 
   _scrollToStart(minDate, viewMode) {
-    requestAnimationFrame(() => {
-      if (!this.gantt || !this.gantt.gantt_start) return
+    // Use setTimeout to ensure browser has finished layout after frappe-gantt renders
+    setTimeout(() => {
       const paddingDays = viewMode === "Day" ? 3 : viewMode === "Week" ? 7 : 14
       const target = new Date(minDate)
       target.setDate(target.getDate() - paddingDays)
+
+      // Determine gantt chart start from internal property or fall back to SVG structure
+      let ganttStart = null
+      if (this.gantt && this.gantt.gantt_start) {
+        ganttStart = new Date(this.gantt.gantt_start)
+      } else {
+        // Fallback: use first task start minus one month buffer
+        const earliest = new Date(minDate)
+        earliest.setMonth(earliest.getMonth() - 1)
+        ganttStart = earliest
+      }
+
       const msPerDay = 86400000
-      const daysDiff = (target - this.gantt.gantt_start) / msPerDay
+      const daysDiff = (target - ganttStart) / msPerDay
       const pxPerDay = viewMode === "Day" ? 38 : viewMode === "Week" ? 20 : 4
-      this.element.scrollLeft = Math.max(0, daysDiff * pxPerDay)
-    })
+
+      // Find the scrollable container (the element with overflow-x-auto)
+      const scrollEl = this.element.closest("[class*='overflow']") || this.element
+      scrollEl.scrollLeft = Math.max(0, daysDiff * pxPerDay)
+    }, 50)
   }
 
   disconnect() {

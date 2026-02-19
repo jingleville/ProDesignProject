@@ -35,7 +35,7 @@ class TaskPolicy < ApplicationPolicy
   end
 
   def submit_for_approval?
-    return false unless record.draft?
+    return false unless record.draft? || record.rejected?
     return true if user.admin?
     (user.project_manager? || user.sales_manager?) && record.project.created_by_id == user.id
   end

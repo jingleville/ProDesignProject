@@ -20,6 +20,11 @@
       <% if policy(@task).update? %>
         <%= link_to "Редактировать", edit_project_task_path(@project, @task), class: "bg-gray-200 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-300 text-sm" %>
       <% end %>
+      <% if policy(@task).destroy? %>
+        <%= button_to "Удалить", project_task_path(@project, @task), method: :delete,
+              class: "bg-red-100 text-red-700 px-3 py-2 rounded-md hover:bg-red-200 text-sm",
+              data: { turbo_confirm: "Удалить задачу «#{@task.title}»? Это действие необратимо." } %>
+      <% end %>
     </div>
   </div>
 
