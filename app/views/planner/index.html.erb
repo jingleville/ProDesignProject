@@ -4,6 +4,7 @@
   <div class="flex space-x-2">
     <%= link_to "День", planner_path(mode: "day", date: @date), class: "px-3 py-1 rounded-md #{@mode == 'day' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
     <%= link_to "Неделя", planner_path(mode: "week", date: @date), class: "px-3 py-1 rounded-md #{@mode == 'week' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+    <%= link_to "Список дел", planner_calendar_path, class: "px-3 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300" %>
   </div>
   <div class="flex items-center space-x-2">
     <%= link_to "&larr;".html_safe, planner_path(mode: @mode, date: @mode == "day" ? @date - 1.day : @date - 1.week), class: "px-2 py-1 bg-gray-200 rounded hover:bg-gray-300" %>

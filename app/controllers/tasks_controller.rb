@@ -10,6 +10,7 @@ class TasksController < ApplicationController
     @task = @project.tasks.build
     authorize @task
     @available_dependencies = @project.tasks.where.not(id: @task.id)
+    @available_parent_tasks = @project.tasks.where.not(id: @task.id)
   end
 
   def create
@@ -21,6 +22,7 @@ class TasksController < ApplicationController
       redirect_to project_task_path(@project, @task), notice: "Задача успешно создана."
     else
       @available_dependencies = @project.tasks.where.not(id: @task.id)
+      @available_parent_tasks = @project.tasks.where.not(id: @task.id)
       render :new, status: :unprocessable_entity
     end
   end
@@ -28,6 +30,7 @@ class TasksController < ApplicationController
   def edit
     authorize @task
     @available_dependencies = @project.tasks.where.not(id: @task.id)
+    @available_parent_tasks = @project.tasks.where.not(id: [@task.id] + descendant_ids(@task))
   end
 
   def update
@@ -37,6 +40,7 @@ class TasksController < ApplicationController
       redirect_to project_task_path(@project, @task), notice: "Задача успешно обновлена."
     else
       @available_dependencies = @project.tasks.where.not(id: @task.id)
+      @available_parent_tasks = @project.tasks.where.not(id: [@task.id] + descendant_ids(@task))
       render :edit, status: :unprocessable_entity
     end
   end
@@ -99,7 +103,9 @@ class TasksController < ApplicationController
   end
 
   def task_params
-    params.require(:task).permit(:title, :description, :preliminary_start_at, :preliminary_due_at, :approved_start_at, :approved_due_at)
+    base = [:title, :description, :preliminary_start_at, :preliminary_due_at, :parent_task_id]
+    base += [:approved_start_at, :approved_due_at] if current_user.production_manager? || current_user.admin?
+    params.require(:task).permit(*base)
   end
 
   def update_dependencies
@@ -109,5 +115,16 @@ class TasksController < ApplicationController
         @task.task_dependencies.create(depends_on_task_id: dep_id)
       end
     end
+  end
+
+  def descendant_ids(task)
+    result = []
+    queue = task.child_tasks.pluck(:id)
+    while queue.any?
+      id = queue.shift
+      result << id
+      queue.concat(Task.where(parent_task_id: id).pluck(:id))
+    end
+    result
   end
 end

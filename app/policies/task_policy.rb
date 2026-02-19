@@ -4,23 +4,40 @@ class TaskPolicy < ApplicationPolicy
   end
 
   def show?
-    true
+    case user.role
+    when "production_manager", "director", "admin"
+      true
+    when "project_manager", "sales_manager"
+      record.project.created_by_id == user.id
+    when "worker"
+      record.assignee_id == user.id
+    else
+      false
+    end
   end
 
   def create?
-    user.project_manager? || user.admin? || user.director?
+    user.project_manager? || user.sales_manager? || user.admin?
   end
 
   def update?
-    user.project_manager? || user.admin? || user.director? || user.production_manager?
+    user.admin? ||
+      user.production_manager? ||
+      (record.project.created_by_id == user.id && (user.project_manager? || user.sales_manager?))
   end
 
   def destroy?
-    user.admin? || user.project_manager?
+    user.admin? || (user.project_manager? && record.project.created_by_id == user.id)
+  end
+
+  def update_approved_dates?
+    user.production_manager? || user.admin?
   end
 
   def submit_for_approval?
-    (user.project_manager? || user.admin?) && record.draft?
+    return false unless record.draft?
+    return true if user.admin?
+    (user.project_manager? || user.sales_manager?) && record.project.created_by_id == user.id
   end
 
   def approve?
@@ -45,7 +62,16 @@ class TaskPolicy < ApplicationPolicy
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      scope.all
+      case user.role
+      when "production_manager", "director", "admin"
+        scope.all
+      when "project_manager", "sales_manager"
+        scope.joins(:project).where(projects: { created_by_id: user.id })
+      when "worker"
+        scope.where(assignee_id: user.id)
+      else
+        scope.none
+      end
     end
   end
 end

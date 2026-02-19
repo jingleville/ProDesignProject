@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_18_100931) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_19_121436) do
   create_table "audit_logs", force: :cascade do |t|
     t.string "auditable_type", null: false
     t.integer "auditable_id", null: false
@@ -21,6 +21,17 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_18_100931) do
     t.datetime "updated_at", null: false
     t.index ["auditable_type", "auditable_id"], name: "index_audit_logs_on_auditable"
     t.index ["user_id"], name: "index_audit_logs_on_user_id"
+  end
+
+  create_table "budget_items", force: :cascade do |t|
+    t.integer "task_id", null: false
+    t.string "material", null: false
+    t.string "format"
+    t.decimal "quantity", precision: 10, scale: 2, default: "0.0", null: false
+    t.decimal "price", precision: 10, scale: 2, default: "0.0", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["task_id"], name: "index_budget_items_on_task_id"
   end
 
   create_table "comments", force: :cascade do |t|
@@ -71,8 +82,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_18_100931) do
     t.integer "approved_by_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "parent_task_id"
     t.index ["assignee_id"], name: "index_tasks_on_assignee_id"
     t.index ["created_by_id"], name: "index_tasks_on_created_by_id"
+    t.index ["parent_task_id"], name: "index_tasks_on_parent_task_id"
     t.index ["project_id"], name: "index_tasks_on_project_id"
     t.index ["status"], name: "index_tasks_on_status"
   end
@@ -93,7 +106,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_18_100931) do
   end
 
   add_foreign_key "audit_logs", "users"
+  add_foreign_key "budget_items", "tasks"
   add_foreign_key "comments", "users"
   add_foreign_key "task_dependencies", "tasks"
   add_foreign_key "tasks", "projects"
+  add_foreign_key "tasks", "tasks", column: "parent_task_id"
 end

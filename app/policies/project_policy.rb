@@ -8,11 +8,12 @@ class ProjectPolicy < ApplicationPolicy
   end
 
   def create?
-    user.project_manager? || user.admin? || user.director?
+    user.project_manager? || user.sales_manager? || user.admin?
   end
 
   def update?
-    user.project_manager? || user.admin? || user.director?
+    user.admin? ||
+      (record.created_by_id == user.id && (user.project_manager? || user.sales_manager?))
   end
 
   def destroy?
@@ -21,7 +22,16 @@ class ProjectPolicy < ApplicationPolicy
 
   class Scope < ApplicationPolicy::Scope
     def resolve
-      scope.all
+      case user.role
+      when "production_manager", "director", "admin"
+        scope.all
+      when "project_manager", "sales_manager"
+        scope.where(created_by: user)
+      when "worker"
+        scope.joins(:tasks).where(tasks: { assignee_id: user.id }).distinct
+      else
+        scope.none
+      end
     end
   end
 end

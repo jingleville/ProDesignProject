@@ -30,7 +30,34 @@
     </div>
   </div>
 
-  <% if available_dependencies.any? %>
+  <% if policy(task).update_approved_dates? %>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <%= f.label :approved_start_at, "Согласованное начало", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.date_field :approved_start_at, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 border" %>
+      </div>
+      <div>
+        <%= f.label :approved_due_at, "Согласованный срок", class: "block text-sm font-medium text-gray-700" %>
+        <%= f.date_field :approved_due_at, class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 border" %>
+      </div>
+    </div>
+  <% end %>
+
+  <% if local_assigns[:available_parent_tasks]&.any? %>
+    <div>
+      <%= f.label :parent_task_id, "Родительская задача", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.select :parent_task_id,
+            available_parent_tasks.map { |t|
+              label = t.title
+              label += " — срок: #{t.due_date.strftime('%d.%m.%Y')}" if t.due_date.present?
+              [label, t.id]
+            },
+            { include_blank: "Нет (корневая задача)", selected: task.parent_task_id },
+            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 border" %>
+    </div>
+  <% end %>
+
+  <% if local_assigns[:available_dependencies]&.any? %>
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Зависимости</label>
       <div class="space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
@@ -39,7 +66,12 @@
             <input type="checkbox" name="task[dependency_ids][]" value="<%= dep_task.id %>"
               <%= "checked" if task.dependencies.include?(dep_task) %>
               class="rounded border-gray-300 text-indigo-600">
-            <span class="text-sm"><%= dep_task.title %></span>
+            <span class="text-sm">
+              <%= dep_task.title %>
+              <% if dep_task.due_date.present? %>
+                <span class="text-gray-400">— срок: <%= dep_task.due_date.strftime("%d.%m.%Y") %></span>
+              <% end %>
+            </span>
           </label>
         <% end %>
       </div>

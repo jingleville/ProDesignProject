@@ -1,18 +1,19 @@
 class PlannerPolicy < ApplicationPolicy
   def index?
-    1/0
     true
   end
 
   class Scope < ApplicationPolicy::Scope
     def resolve
       case user.role
-      when "director", "admin"
-        # Директор и админ видят все задачи
+      when "director", "admin", "production_manager"
         scope.all
+      when "project_manager", "sales_manager"
+        scope.joins(:project).where(projects: { created_by_id: user.id })
+      when "worker"
+        scope.where(assignee_id: user.id)
       else
-        # Обычные пользователи видят только свои задачи
-        scope.joins(:assignee).where(assignee: { id: user.id })
+        scope.none
       end
     end
   end

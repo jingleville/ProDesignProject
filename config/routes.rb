@@ -12,6 +12,7 @@ Rails.application.routes.draw do
         patch :assign
       end
       resources :comments, only: [ :create, :destroy ], module: :tasks
+      resources :budget_items, only: [ :create, :update, :destroy ]
     end
     resources :comments, only: [ :create, :destroy ], module: :projects
     get :gantt, on: :member
@@ -21,6 +22,7 @@ Rails.application.routes.draw do
     resources :users, only: [ :index, :edit, :update ]
   end
 
+  get "planner/calendar", to: "planner#calendar", as: :planner_calendar
   get "planner", to: "planner#index"
   get "production", to: "production#index"
   get "gantt", to: "gantt#index"

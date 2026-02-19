@@ -24,6 +24,8 @@ class Task < ApplicationRecord
   belongs_to :assigned_by, class_name: "User", optional: true
   belongs_to :assignee, class_name: "User", optional: true
   belongs_to :approved_by, class_name: "User", optional: true
+  belongs_to :parent_task, class_name: "Task", optional: true
+  has_many :child_tasks, class_name: "Task", foreign_key: :parent_task_id, dependent: :nullify
 
   has_many :task_dependencies, dependent: :destroy
   has_many :dependencies, through: :task_dependencies, source: :depends_on_task
@@ -32,8 +34,11 @@ class Task < ApplicationRecord
 
   has_many :comments, as: :commentable, dependent: :destroy
   has_many :audit_logs, as: :auditable, dependent: :destroy
+  has_many :budget_items, dependent: :destroy
 
   validates :title, presence: true
+  validate :no_circular_parent, if: -> { parent_task_id.present? }
+  validate :parent_in_same_project, if: -> { parent_task_id.present? }
 
   after_update :check_project_completion, if: -> { saved_change_to_status? && completed? }
 
@@ -60,5 +65,24 @@ class Task < ApplicationRecord
 
   def check_project_completion
     project.check_completion!
+  end
+
+  def no_circular_parent
+    visited = []
+    current = parent_task_id
+    while current.present?
+      if current == id || visited.include?(current)
+        errors.add(:parent_task, "создаёт циклическую зависимость")
+        return
+      end
+      visited << current
+      current = Task.where(id: current).pick(:parent_task_id)
+    end
+  end
+
+  def parent_in_same_project
+    if Task.where(id: parent_task_id).pick(:project_id) != project_id
+      errors.add(:parent_task, "должна принадлежать тому же проекту")
+    end
   end
 end

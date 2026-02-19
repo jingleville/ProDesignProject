@@ -21,7 +21,8 @@
 <div class="flex justify-between items-center mb-4">
   <h2 class="text-lg font-semibold">Задачи</h2>
   <% if policy(Task).create? %>
-    <%= link_to "Новая задача", new_project_task_path(@project), class: "bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700 text-sm" %>
+    <%= link_to "Новая задача", new_project_task_path(@project),
+          target: "_blank", data: { turbo: false }, class: "bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700 text-sm" %>
   <% end %>
 </div>
 
