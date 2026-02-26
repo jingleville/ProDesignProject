@@ -43,7 +43,7 @@ class User < ApplicationRecord
     "#{first_name} #{last_name}"
   end
 
-  def all_workers
+  def self.all_workers
     worker + production_manager
   end
 end
