@@ -44,6 +44,6 @@ class User < ApplicationRecord
   end
 
   def self.all_workers
-    worker + production_manager
+    User.where(role: ["worker", "production_manager"])
   end
 end
