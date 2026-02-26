@@ -54,7 +54,7 @@ class TasksController < ApplicationController
   def submit_for_approval
     authorize @task
     @task.update!(status: :awaiting_production_approval)
-    redirect_to project_task_path(@project, @task), notice: "Задача отправлена на согласование."
+    redirect_to project_path(@project), notice: "Задача отправлена на согласование."
   end
 
   def approve
@@ -88,8 +88,11 @@ class TasksController < ApplicationController
 
   def assign
     authorize @task
-    @task.update!(assignee_id: params[:task][:assignee_id], assigned_by: current_user)
-    redirect_to project_task_path(@project, @task), notice: "Исполнитель назначен."
+    user_ids = Array(params[:task][:assignee_ids]).reject(&:blank?).map(&:to_i)
+    @task.task_assignees.destroy_all
+    user_ids.each { |uid| @task.task_assignees.create!(user_id: uid) }
+    @task.update!(assigned_by: current_user)
+    redirect_to project_task_path(@project, @task), notice: "Исполнители назначены."
   end
 
   private
@@ -99,7 +102,7 @@ class TasksController < ApplicationController
   end
 
   def set_task
-    @task = @project.tasks.find(params[:id])
+    @task = @project.tasks.includes(:assignees, :dependencies, :child_tasks, :parent_task).find(params[:id])
   end
 
   def task_params

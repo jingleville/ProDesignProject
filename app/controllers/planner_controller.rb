@@ -24,7 +24,7 @@ class PlannerController < ApplicationController
     @tasks_by_date = base_tasks
       .where("COALESCE(approved_due_at, preliminary_due_at) BETWEEN ? AND ?",
              Date.current, Date.current + @days_ahead.days)
-      .includes(:project, :assignee)
+      .includes(:project, :assignees)
       .order(Arel.sql("COALESCE(approved_due_at, preliminary_due_at) ASC"))
       .group_by(&:due_date)
   end

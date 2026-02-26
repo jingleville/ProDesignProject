@@ -27,6 +27,8 @@ class User < ApplicationRecord
   has_many :created_projects, class_name: "Project", foreign_key: :created_by_id, dependent: :restrict_with_error
   has_many :created_tasks, class_name: "Task", foreign_key: :created_by_id, dependent: :restrict_with_error
   has_many :assigned_tasks, class_name: "Task", foreign_key: :assignee_id, dependent: :nullify
+  has_many :task_assignees, dependent: :destroy
+  has_many :tasks_as_assignee, through: :task_assignees, source: :task
   has_many :comments, dependent: :destroy
 
   validates :first_name, :last_name, presence: true

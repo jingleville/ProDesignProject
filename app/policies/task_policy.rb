@@ -10,7 +10,7 @@ class TaskPolicy < ApplicationPolicy
     when "project_manager", "sales_manager"
       record.project.created_by_id == user.id
     when "worker"
-      record.assignee_id == user.id
+      record.assignees.include?(user)
     else
       false
     end
@@ -49,11 +49,11 @@ class TaskPolicy < ApplicationPolicy
   end
 
   def start?
-    record.assignee == user && record.approved? && record.dependencies_completed?
+    record.assigned_to?(user) && record.approved? && record.dependencies_completed?
   end
 
   def complete?
-    (record.assignee == user || user.production_manager? || user.admin?) && record.in_progress?
+    (record.assigned_to?(user) || user.production_manager? || user.admin?) && record.in_progress?
   end
 
   def assign?
@@ -68,7 +68,7 @@ class TaskPolicy < ApplicationPolicy
       when "project_manager", "sales_manager"
         scope.joins(:project).where(projects: { created_by_id: user.id })
       when "worker"
-        scope.where(assignee_id: user.id)
+        scope.joins(:task_assignees).where(task_assignees: { user_id: user.id })
       else
         scope.none
       end

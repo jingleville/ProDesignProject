@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_19_121436) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_26_125419) do
   create_table "audit_logs", force: :cascade do |t|
     t.string "auditable_type", null: false
     t.integer "auditable_id", null: false
@@ -54,6 +54,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_19_121436) do
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_projects_on_created_by_id"
     t.index ["status"], name: "index_projects_on_status"
+  end
+
+  create_table "task_assignees", force: :cascade do |t|
+    t.integer "task_id", null: false
+    t.integer "user_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["task_id", "user_id"], name: "index_task_assignees_on_task_id_and_user_id", unique: true
+    t.index ["task_id"], name: "index_task_assignees_on_task_id"
+    t.index ["user_id"], name: "index_task_assignees_on_user_id"
   end
 
   create_table "task_dependencies", force: :cascade do |t|
@@ -108,6 +118,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_19_121436) do
   add_foreign_key "audit_logs", "users"
   add_foreign_key "budget_items", "tasks"
   add_foreign_key "comments", "users"
+  add_foreign_key "task_assignees", "tasks"
+  add_foreign_key "task_assignees", "users"
   add_foreign_key "task_dependencies", "tasks"
   add_foreign_key "tasks", "projects"
   add_foreign_key "tasks", "tasks", column: "parent_task_id"

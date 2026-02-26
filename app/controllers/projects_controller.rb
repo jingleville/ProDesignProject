@@ -9,7 +9,7 @@ class ProjectsController < ApplicationController
 
   def show
     authorize @project
-    @tasks = @project.tasks.includes(:assignee, :created_by, :dependencies).order(:preliminary_start_at)
+    @tasks = @project.tasks.includes(:assignees, :created_by, :dependencies).order(:preliminary_start_at)
   end
 
   def new

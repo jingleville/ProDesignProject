@@ -28,7 +28,7 @@ class ProjectPolicy < ApplicationPolicy
       when "project_manager", "sales_manager"
         scope.where(created_by: user)
       when "worker"
-        scope.joins(:tasks).where(tasks: { assignee_id: user.id }).distinct
+        scope.joins(tasks: :task_assignees).where(task_assignees: { user_id: user.id }).distinct
       else
         scope.none
       end

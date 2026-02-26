@@ -52,7 +52,7 @@
             <%= render partial: "tasks/status_badge", locals: { status: task.status } %>
           </td>
           <td class="px-6 py-4 text-sm text-gray-500">
-            <%= task.assignee&.full_name || "Не назначен" %>
+            <%= task.assignees.map(&:full_name).join(", ").presence || "Не назначены" %>
           </td>
           <td class="px-6 py-4 text-sm text-gray-500">
             <%= task.start_date&.strftime("%d.%m.%Y") %>

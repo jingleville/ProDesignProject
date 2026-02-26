@@ -22,6 +22,13 @@ class Admin::UsersController < ApplicationController
     end
   end
 
+  def destroy
+    authorize @user
+    @user.destroy
+    redirect_to redirect_to admin_users_path, notice: "Пользователь удален."
+  end
+
+
   private
 
   def set_user

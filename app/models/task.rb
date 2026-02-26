@@ -32,6 +32,9 @@ class Task < ApplicationRecord
   has_many :inverse_task_dependencies, class_name: "TaskDependency", foreign_key: :depends_on_task_id, dependent: :destroy
   has_many :dependents, through: :inverse_task_dependencies, source: :task
 
+  has_many :task_assignees, dependent: :destroy
+  has_many :assignees, through: :task_assignees, source: :user
+
   has_many :comments, as: :commentable, dependent: :destroy
   has_many :audit_logs, as: :auditable, dependent: :destroy
   has_many :budget_items, dependent: :destroy
@@ -47,6 +50,10 @@ class Task < ApplicationRecord
 
     due_date = approved_due_at || preliminary_due_at
     due_date.present? && due_date < Date.current
+  end
+
+  def assigned_to?(user)
+    assignees.include?(user)
   end
 
   def dependencies_completed?

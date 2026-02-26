@@ -36,8 +36,12 @@
 
   <div class="mt-6 grid grid-cols-2 gap-4 text-sm">
     <div>
-      <span class="text-gray-500">Исполнитель:</span>
-      <span class="ml-2 font-medium"><%= @task.assignee&.full_name || "Не назначен" %></span>
+      <span class="text-gray-500">Исполнители:</span>
+      <% if @task.assignees.any? %>
+        <span class="ml-2 font-medium"><%= @task.assignees.map(&:full_name).join(", ") %></span>
+      <% else %>
+        <span class="ml-2 font-medium text-gray-400">Не назначены</span>
+      <% end %>
     </div>
     <div>
       <span class="text-gray-500">Согласовал:</span>
@@ -108,9 +112,22 @@
       <%= button_to "Завершить", complete_project_task_path(@project, @task), method: :patch, class: "bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 text-sm" %>
     <% end %>
     <% if policy(@task).assign? %>
-      <%= form_with(url: assign_project_task_path(@project, @task), method: :patch, class: "flex items-center space-x-2") do |f| %>
-        <%= f.select :assignee_id, User.all.map { |u| [u.full_name, u.id] }, { include_blank: "Выберите исполнителя" }, name: "task[assignee_id]", class: "rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 border text-sm" %>
-        <%= f.submit "Назначить", class: "bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700 text-sm cursor-pointer" %>
+      <%= form_with(url: assign_project_task_path(@project, @task), method: :patch) do |f| %>
+        <div class="mt-2">
+          <span class="text-sm text-gray-700 font-medium block mb-1">Назначить исполнителей:</span>
+          <div class="space-y-1 max-h-40 overflow-y-auto border rounded-md p-2 bg-white">
+            <% User.worker.order(:last_name, :first_name).each do |worker| %>
+              <label class="flex items-center space-x-2">
+                <input type="checkbox" name="task[assignee_ids][]" value="<%= worker.id %>"
+                       <%= "checked" if @task.assignees.include?(worker) %>
+                       class="rounded border-gray-300 text-indigo-600">
+                <span class="text-sm"><%= worker.full_name %></span>
+              </label>
+            <% end %>
+          </div>
+          <input type="hidden" name="task[assignee_ids][]" value="" />
+          <%= f.submit "Назначить", class: "mt-2 bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700 text-sm cursor-pointer" %>
+        </div>
       <% end %>
     <% end %>
   </div>
