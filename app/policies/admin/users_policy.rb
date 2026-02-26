@@ -1,14 +1,14 @@
 class Admin::UsersPolicy < ApplicationPolicy
   def edit?
-    user.admin? || user.director?
+    user.is_admin? || user.director?
   end
 
   def update?
-    user.admin? || user.director?
+    user.is_admin? || user.director?
   end
 
   def destroy?
-    user.admin? || user.director?
+    user.is_admin? || user.director?
   end
 
   class Scope < ApplicationPolicy::Scope

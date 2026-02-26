@@ -4,7 +4,7 @@ class CommentPolicy < ApplicationPolicy
   end
 
   def destroy?
-    record.user == user || user.admin?
+    record.user == user || user.is_admin?
   end
 
   class Scope < ApplicationPolicy::Scope

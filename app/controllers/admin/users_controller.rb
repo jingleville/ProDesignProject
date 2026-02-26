@@ -40,7 +40,7 @@ class Admin::UsersController < ApplicationController
   end
 
   def require_admin_or_director
-    unless current_user.admin? || current_user.director?
+    unless current_user.is_admin? || current_user.director?
       flash[:alert] = "У вас нет прав для этого действия."
       redirect_to root_path
     end

@@ -24,17 +24,26 @@ class User < ApplicationRecord
     ROLE_TRANSLATIONS[role] || role.humanize
   end
 
+  def is_admin?
+    admin? || director?
+  end
+
   has_many :created_projects, class_name: "Project", foreign_key: :created_by_id, dependent: :restrict_with_error
   has_many :created_tasks, class_name: "Task", foreign_key: :created_by_id, dependent: :restrict_with_error
   has_many :assigned_tasks, class_name: "Task", foreign_key: :assignee_id, dependent: :nullify
   has_many :task_assignees, dependent: :destroy
   has_many :tasks_as_assignee, through: :task_assignees, source: :task
   has_many :comments, dependent: :destroy
+  has_many :notifications, dependent: :destroy
 
   validates :first_name, :last_name, presence: true
   validates :role, presence: true
 
   def full_name
     "#{first_name} #{last_name}"
+  end
+
+  def all_workers
+    worker + production_manager
   end
 end

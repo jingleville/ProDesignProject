@@ -27,6 +27,11 @@ Rails.application.routes.draw do
   get "production", to: "production#index"
   get "gantt", to: "gantt#index"
 
+  resources :notifications, only: [:index] do
+    collection { patch :read_all }
+    member     { patch :read }
+  end
+
   get "up" => "rails/health#show", as: :rails_health_check
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest

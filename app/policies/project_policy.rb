@@ -8,16 +8,16 @@ class ProjectPolicy < ApplicationPolicy
   end
 
   def create?
-    user.project_manager? || user.sales_manager? || user.admin?
+    user.project_manager? || user.sales_manager? || user.is_admin?
   end
 
   def update?
-    user.admin? ||
+    user.is_admin? ||
       (record.created_by_id == user.id && (user.project_manager? || user.sales_manager?))
   end
 
   def destroy?
-    user.admin?
+    user.is_admin?
   end
 
   class Scope < ApplicationPolicy::Scope

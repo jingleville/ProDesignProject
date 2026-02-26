@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_26_125419) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_26_174334) do
   create_table "audit_logs", force: :cascade do |t|
     t.string "auditable_type", null: false
     t.integer "auditable_id", null: false
@@ -43,6 +43,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_26_125419) do
     t.datetime "updated_at", null: false
     t.index ["commentable_type", "commentable_id"], name: "index_comments_on_commentable"
     t.index ["user_id"], name: "index_comments_on_user_id"
+  end
+
+  create_table "notifications", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "actor_id"
+    t.string "notifiable_type"
+    t.integer "notifiable_id"
+    t.string "event_type", null: false
+    t.string "message", null: false
+    t.datetime "read_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["actor_id"], name: "index_notifications_on_actor_id"
+    t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable_type_and_notifiable_id"
+    t.index ["user_id", "read_at"], name: "index_notifications_on_user_id_and_read_at"
+    t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
   create_table "projects", force: :cascade do |t|
@@ -118,6 +134,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_26_125419) do
   add_foreign_key "audit_logs", "users"
   add_foreign_key "budget_items", "tasks"
   add_foreign_key "comments", "users"
+  add_foreign_key "notifications", "users"
+  add_foreign_key "notifications", "users", column: "actor_id"
   add_foreign_key "task_assignees", "tasks"
   add_foreign_key "task_assignees", "users"
   add_foreign_key "task_dependencies", "tasks"

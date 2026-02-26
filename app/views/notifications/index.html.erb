@@ -1,0 +1,20 @@
+<h1 class="text-2xl font-bold mb-6">Уведомления</h1>
+
+<div class="bg-white shadow rounded-lg divide-y divide-gray-200">
+  <% if @notifications.empty? %>
+    <p class="px-6 py-8 text-center text-gray-400">Нет уведомлений</p>
+  <% else %>
+    <% @notifications.each do |n| %>
+      <div class="px-6 py-4 flex items-start space-x-3 <%= n.read? ? 'bg-white' : 'bg-indigo-50' %>">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm text-gray-900"><%= n.message %></p>
+          <p class="text-xs text-gray-400 mt-1"><%= n.created_at.strftime("%d.%m.%Y %H:%M") %></p>
+        </div>
+        <% if n.notifiable.is_a?(Task) %>
+          <%= link_to "Открыть", project_task_path(n.notifiable.project, n.notifiable),
+                class: "text-xs text-indigo-600 hover:text-indigo-800 whitespace-nowrap" %>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

@@ -5,7 +5,9 @@ class Tasks::CommentsController < ApplicationController
     @comment = @task.comments.build(comment_params)
     @comment.user = current_user
     authorize @comment
-    @comment.save
+    if @comment.save
+      NotificationService.comment_added(@comment, @task, current_user)
+    end
     redirect_to project_task_path(@project, @task)
   end
 
