@@ -1,34 +1,97 @@
-<% content_for :head do %>
-  <%= stylesheet_link_tag "frappe-gantt" %>
-<% end %>
-
 <div class="mb-4">
   <%= link_to "&larr; Назад к #{@project.name}".html_safe, project_path(@project), class: "text-indigo-600 hover:text-indigo-800 text-sm" %>
 </div>
 
 <h1 class="text-2xl font-bold mb-6">Диаграмма Ганта — <%= @project.name %></h1>
 
-<% tasks_with_dates = @tasks.select { |t| t.start_date.present? && t.due_date.present? } %>
+<%
+  gantt_items = @tasks.select { |t| t.preliminary_start_at.present? || t.approved_start_at.present? }.map do |task|
+    {
+      id: "task_#{task.id}",
+      name: task.title,
+      status: task.status,
+      planned_start: task.preliminary_start_at&.strftime("%Y-%m-%d"),
+      planned_end: task.preliminary_due_at&.strftime("%Y-%m-%d"),
+      actual_start: task.approved_start_at&.strftime("%Y-%m-%d"),
+      actual_end: task.approved_due_at&.strftime("%Y-%m-%d"),
+      url: project_task_path(@project, task),
+      progress: task.completed? ? 100 : (task.in_progress? ? 50 : 0)
+    }
+  end
+%>
 
-<% if tasks_with_dates.empty? %>
+<% if gantt_items.empty? %>
   <p class="text-gray-500">Нет задач с датами для отображения.</p>
 <% else %>
-  <%
-    gantt_tasks = tasks_with_dates.map do |task|
-      dep_ids = task.dependencies.select { |d| d.start_date.present? && d.due_date.present? }.map { |d| "task_#{d.id}" }.join(", ")
-      {
-        id: "task_#{task.id}",
-        name: task.title,
-        start: task.start_date.strftime("%Y-%m-%d"),
-        end: task.due_date.strftime("%Y-%m-%d"),
-        progress: task.completed? ? 100 : (task.in_progress? ? 50 : 0),
-        dependencies: dep_ids
-      }
-    end
-  %>
+  <div class="bg-white shadow rounded-lg p-4"
+       data-controller="gantt2"
+       data-gantt2-items-value="<%= gantt_items.to_json %>">
 
-  <div class="bg-white shadow rounded-lg p-4 overflow-x-auto"
-       data-controller="gantt"
-       data-gantt-tasks-value="<%= gantt_tasks.to_json %>">
+    <%# Toolbar %>
+    <div class="flex items-center gap-2 mb-3">
+      <span class="text-sm text-gray-500 mr-1">Масштаб:</span>
+      <button data-gantt2-target="dayBtn"
+              data-action="click->gantt2#switchMode"
+              data-gantt2-mode-param="day"
+              class="px-3 py-1 text-sm rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors">
+        День
+      </button>
+      <button data-gantt2-target="weekBtn"
+              data-action="click->gantt2#switchMode"
+              data-gantt2-mode-param="week"
+              class="px-3 py-1 text-sm rounded border border-gray-300 bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
+        Неделя
+      </button>
+      <button data-gantt2-target="monthBtn"
+              data-action="click->gantt2#switchMode"
+              data-gantt2-mode-param="month"
+              class="px-3 py-1 text-sm rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors">
+        Месяц
+      </button>
+    </div>
+
+    <%# Gantt body %>
+    <div class="flex" style="max-height: 600px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px;">
+      <%# Fixed name column %>
+      <div data-gantt2-target="nameColumn"
+           style="width:220px; flex-shrink:0; overflow:hidden; border-right:1px solid #e5e7eb;">
+      </div>
+      <%# Scrollable SVG area %>
+      <div data-gantt2-target="svgScroll"
+           class="flex-1 overflow-x-auto overflow-y-hidden">
+      </div>
+    </div>
+
+    <%# Legend %>
+    <div class="mt-3 flex flex-wrap gap-3 text-xs text-gray-500">
+      <div class="flex items-center gap-1">
+        <div style="width:28px; height:10px; background:rgba(148,163,184,0.4); border-radius:2px;"></div>
+        <span>Плановые даты</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <div style="width:20px; height:10px; background:#6366f1; border-radius:2px;"></div>
+        <span>Согласована</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <div style="width:20px; height:10px; background:#3b82f6; border-radius:2px;"></div>
+        <span>В работе</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <div style="width:20px; height:10px; background:#22c55e; border-radius:2px;"></div>
+        <span>Завершена</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <div style="width:20px; height:10px; background:#f59e0b; border-radius:2px;"></div>
+        <span>На согласовании</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <div style="width:20px; height:10px; background:#9ca3af; border-radius:2px;"></div>
+        <span>Черновик</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <div style="width:20px; height:10px; background:#ef4444; border-radius:2px;"></div>
+        <span>Отклонена</span>
+      </div>
+    </div>
   </div>
 <% end %>

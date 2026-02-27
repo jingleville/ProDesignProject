@@ -1,44 +1,93 @@
-<% content_for :head do %>
-  <%= stylesheet_link_tag "frappe-gantt" %>
-<% end %>
-
 <h1 class="text-2xl font-bold mb-6">Диаграмма Ганта — все проекты</h1>
 
-<% projects_with_tasks = @projects.select { |p| p.tasks.any? { |t| t.start_date.present? && t.due_date.present? } } %>
+<%
+  gantt_items = @projects.filter_map do |project|
+    tasks = project.tasks.select { |t| t.preliminary_start_at.present? || t.approved_start_at.present? }
+    next if tasks.empty?
 
-<% if projects_with_tasks.empty? %>
+    planned_starts = tasks.filter_map(&:preliminary_start_at)
+    planned_ends   = tasks.filter_map(&:preliminary_due_at)
+    actual_starts  = tasks.filter_map(&:approved_start_at)
+    actual_ends    = tasks.filter_map(&:approved_due_at)
+
+    completed = tasks.select(&:completed?).size
+    total = tasks.size
+    progress = total > 0 ? (completed.to_f / total * 100).round : 0
+
+    {
+      id: "project_#{project.id}",
+      name: project.name,
+      status: project.status,
+      planned_start: planned_starts.min&.strftime("%Y-%m-%d"),
+      planned_end:   planned_ends.max&.strftime("%Y-%m-%d"),
+      actual_start:  actual_starts.min&.strftime("%Y-%m-%d"),
+      actual_end:    actual_ends.max&.strftime("%Y-%m-%d"),
+      url: gantt_project_path(project),
+      progress: progress
+    }
+  end
+%>
+
+<% if gantt_items.empty? %>
   <p class="text-gray-500">Нет проектов с задачами для отображения.</p>
 <% else %>
-  <%
-    gantt_tasks = projects_with_tasks.map do |project|
-      earliest_start = project.tasks.filter_map(&:start_date).min
-      latest_due = project.tasks.filter_map(&:due_date).max
-      completed = project.tasks.select(&:completed?).size
-      total = project.tasks.size
-      progress = total > 0 ? (completed.to_f / total * 100).round : 0
+  <div class="bg-white shadow rounded-lg p-4"
+       data-controller="gantt2"
+       data-gantt2-items-value="<%= gantt_items.to_json %>">
 
-      {
-        id: "project_#{project.id}",
-        name: project.name,
-        start: (earliest_start || Date.current).strftime("%Y-%m-%d"),
-        end: (latest_due || Date.current + 30.days).strftime("%Y-%m-%d"),
-        progress: progress,
-        dependencies: ""
-      }
-    end
-  %>
+    <%# Toolbar %>
+    <div class="flex items-center gap-2 mb-3">
+      <span class="text-sm text-gray-500 mr-1">Масштаб:</span>
+      <button data-gantt2-target="dayBtn"
+              data-action="click->gantt2#switchMode"
+              data-gantt2-mode-param="day"
+              class="px-3 py-1 text-sm rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors">
+        День
+      </button>
+      <button data-gantt2-target="weekBtn"
+              data-action="click->gantt2#switchMode"
+              data-gantt2-mode-param="week"
+              class="px-3 py-1 text-sm rounded border border-gray-300 bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
+        Неделя
+      </button>
+      <button data-gantt2-target="monthBtn"
+              data-action="click->gantt2#switchMode"
+              data-gantt2-mode-param="month"
+              class="px-3 py-1 text-sm rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors">
+        Месяц
+      </button>
+    </div>
 
-  <div class="bg-white shadow rounded-lg p-4 overflow-x-auto"
-       data-controller="gantt"
-       data-gantt-tasks-value="<%= gantt_tasks.to_json %>">
-  </div>
-
-  <div class="mt-4">
-    <% projects_with_tasks.each do |project| %>
-      <div class="mb-2">
-        <%= link_to project.name, gantt_project_path(project), class: "text-indigo-600 hover:text-indigo-800" %>
-        <span class="text-sm text-gray-500">(<%= project.tasks.size %> задач)</span>
+    <%# Gantt body %>
+    <div class="flex" style="max-height: 600px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px;">
+      <%# Fixed name column %>
+      <div data-gantt2-target="nameColumn"
+           style="width:220px; flex-shrink:0; overflow:hidden; border-right:1px solid #e5e7eb;">
       </div>
-    <% end %>
+      <%# Scrollable SVG area %>
+      <div data-gantt2-target="svgScroll"
+           class="flex-1 overflow-x-auto overflow-y-hidden">
+      </div>
+    </div>
+
+    <%# Legend %>
+    <div class="mt-3 flex flex-wrap gap-3 text-xs text-gray-500">
+      <div class="flex items-center gap-1">
+        <div style="width:28px; height:10px; background:rgba(148,163,184,0.4); border-radius:2px;"></div>
+        <span>Плановые даты</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <div style="width:20px; height:10px; background:#22c55e; border-radius:2px;"></div>
+        <span>Завершён</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <div style="width:20px; height:10px; background:#3b82f6; border-radius:2px;"></div>
+        <span>Активный</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <div style="width:20px; height:10px; background:#9ca3af; border-radius:2px;"></div>
+        <span>Черновик</span>
+      </div>
+    </div>
   </div>
 <% end %>
