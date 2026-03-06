@@ -2,6 +2,7 @@ Rails.application.routes.draw do
   devise_for :users, controllers: { registrations: "users/registrations" }
 
   resources :projects do
+    resources :estimate_items, only: [:create, :update, :destroy]
     resources :tasks do
       member do
         patch :submit_for_approval
