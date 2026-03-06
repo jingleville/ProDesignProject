@@ -15,7 +15,7 @@ class Project < ApplicationRecord
     "archived" => "В архиве"
   }.freeze
 
-  belongs_to :created_by, class_name: "User"
+  belongs_to :created_by, class_name: "User", foreign_key: :creator_id
   has_many :tasks, dependent: :destroy
   has_many :comments, as: :commentable, dependent: :destroy
   has_many :audit_logs, as: :auditable, dependent: :destroy

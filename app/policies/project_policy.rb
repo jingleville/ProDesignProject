@@ -13,7 +13,7 @@ class ProjectPolicy < ApplicationPolicy
 
   def update?
     user.is_admin? ||
-      (record.created_by_id == user.id && (user.project_manager? || user.sales_manager?))
+      (record.creator_id == user.id && (user.project_manager? || user.sales_manager?))
   end
 
   def destroy?

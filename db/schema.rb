@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_26_174334) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_06_160641) do
   create_table "audit_logs", force: :cascade do |t|
     t.string "auditable_type", null: false
     t.integer "auditable_id", null: false
@@ -34,6 +34,20 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_26_174334) do
     t.index ["task_id"], name: "index_budget_items_on_task_id"
   end
 
+  create_table "change_logs", force: :cascade do |t|
+    t.string "entity_type", null: false
+    t.integer "entity_id", null: false
+    t.string "field_name", null: false
+    t.text "old_value"
+    t.text "new_value"
+    t.integer "changed_by_id", null: false
+    t.datetime "changed_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["changed_by_id"], name: "index_change_logs_on_changed_by_id"
+    t.index ["entity_type", "entity_id"], name: "index_change_logs_on_entity_type_and_entity_id"
+  end
+
   create_table "comments", force: :cascade do |t|
     t.string "commentable_type", null: false
     t.integer "commentable_id", null: false
@@ -41,8 +55,21 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_26_174334) do
     t.text "body"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "task_id"
+    t.text "mentions", default: "[]"
     t.index ["commentable_type", "commentable_id"], name: "index_comments_on_commentable"
+    t.index ["task_id"], name: "index_comments_on_task_id"
     t.index ["user_id"], name: "index_comments_on_user_id"
+  end
+
+  create_table "estimate_items", force: :cascade do |t|
+    t.string "name", null: false
+    t.decimal "quantity", precision: 10, scale: 2, null: false
+    t.decimal "unit_price", precision: 10, scale: 2, null: false
+    t.integer "project_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id"], name: "index_estimate_items_on_project_id"
   end
 
   create_table "notifications", force: :cascade do |t|
@@ -55,6 +82,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_26_174334) do
     t.datetime "read_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "data", default: "{}"
     t.index ["actor_id"], name: "index_notifications_on_actor_id"
     t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable_type_and_notifiable_id"
     t.index ["user_id", "read_at"], name: "index_notifications_on_user_id_and_read_at"
@@ -65,11 +93,20 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_26_174334) do
     t.string "name", null: false
     t.text "description"
     t.integer "status", default: 0, null: false
-    t.integer "created_by_id", null: false
+    t.integer "creator_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["created_by_id"], name: "index_projects_on_created_by_id"
+    t.index ["creator_id"], name: "index_projects_on_creator_id"
     t.index ["status"], name: "index_projects_on_status"
+  end
+
+  create_table "stages", force: :cascade do |t|
+    t.string "name"
+    t.integer "position"
+    t.integer "project_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id"], name: "index_stages_on_project_id"
   end
 
   create_table "task_assignees", force: :cascade do |t|
@@ -87,6 +124,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_26_174334) do
     t.integer "depends_on_task_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "dependency_type", default: 0, null: false
     t.index ["depends_on_task_id"], name: "index_task_dependencies_on_depends_on_task_id"
     t.index ["task_id", "depends_on_task_id"], name: "index_task_dependencies_on_task_id_and_depends_on_task_id", unique: true
     t.index ["task_id"], name: "index_task_dependencies_on_task_id"
@@ -109,10 +147,17 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_26_174334) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "parent_task_id"
+    t.integer "stage_id"
+    t.date "plan_start_at"
+    t.date "plan_due_at"
+    t.datetime "actual_start_at"
+    t.datetime "actual_due_at"
+    t.datetime "approved_at"
     t.index ["assignee_id"], name: "index_tasks_on_assignee_id"
     t.index ["created_by_id"], name: "index_tasks_on_created_by_id"
     t.index ["parent_task_id"], name: "index_tasks_on_parent_task_id"
     t.index ["project_id"], name: "index_tasks_on_project_id"
+    t.index ["stage_id"], name: "index_tasks_on_stage_id"
     t.index ["status"], name: "index_tasks_on_status"
   end
 
@@ -133,12 +178,17 @@ ActiveRecord::Schema[7.2].define(version: 2026_02_26_174334) do
 
   add_foreign_key "audit_logs", "users"
   add_foreign_key "budget_items", "tasks"
+  add_foreign_key "change_logs", "users", column: "changed_by_id"
+  add_foreign_key "comments", "tasks"
   add_foreign_key "comments", "users"
+  add_foreign_key "estimate_items", "projects"
   add_foreign_key "notifications", "users"
   add_foreign_key "notifications", "users", column: "actor_id"
+  add_foreign_key "stages", "projects"
   add_foreign_key "task_assignees", "tasks"
   add_foreign_key "task_assignees", "users"
   add_foreign_key "task_dependencies", "tasks"
   add_foreign_key "tasks", "projects"
+  add_foreign_key "tasks", "stages"
   add_foreign_key "tasks", "tasks", column: "parent_task_id"
 end

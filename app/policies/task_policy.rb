@@ -8,7 +8,7 @@ class TaskPolicy < ApplicationPolicy
     when "production_manager", "director", "admin"
       true
     when "project_manager", "sales_manager"
-      record.project.created_by_id == user.id
+      record.project.creator_id == user.id
     when "worker"
       record.assignees.include?(user)
     else
@@ -23,11 +23,11 @@ class TaskPolicy < ApplicationPolicy
   def update?
     user.is_admin? ||
       user.production_manager? ||
-      (record.project.created_by_id == user.id && (user.project_manager? || user.sales_manager?))
+      (record.project.creator_id == user.id && (user.project_manager? || user.sales_manager?))
   end
 
   def destroy?
-    user.is_admin? || (user.project_manager? && record.project.created_by_id == user.id)
+    user.is_admin? || (user.project_manager? && record.project.creator_id == user.id)
   end
 
   def update_approved_dates?
@@ -37,7 +37,7 @@ class TaskPolicy < ApplicationPolicy
   def submit_for_approval?
     return false unless record.draft? || record.rejected?
     return true if user.is_admin?
-    (user.project_manager? || user.sales_manager?) && record.project.created_by_id == user.id
+    (user.project_manager? || user.sales_manager?) && record.project.creator_id == user.id
   end
 
   def approve?
@@ -66,7 +66,7 @@ class TaskPolicy < ApplicationPolicy
       when "production_manager", "director", "admin"
         scope.all
       when "project_manager", "sales_manager"
-        scope.joins(:project).where(projects: { created_by_id: user.id })
+        scope.joins(:project).where(projects: { creator_id: user.id })
       when "worker"
         scope.joins(:task_assignees).where(task_assignees: { user_id: user.id })
       else
