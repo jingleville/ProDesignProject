@@ -8,6 +8,13 @@ class Project < ApplicationRecord
     archived: 3
   }
 
+  STATUS_TRANSLATIONS = {
+    "draft"     => "Черновик",
+    "active"    => "Активный",
+    "completed" => "Завершён",
+    "archived"  => "В архиве"
+  }.freeze
+
   belongs_to :creator, class_name: "User", foreign_key: :creator_id
 
   has_many :stages, -> { order(:position) }, dependent: :destroy
