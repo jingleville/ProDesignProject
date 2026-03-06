@@ -9,7 +9,7 @@ Rails.application.routes.draw do
         patch :reject
         patch :start
         patch :complete
-        patch :assign
+        patch :confirm_completion
       end
       resources :comments, only: [ :create, :destroy ], module: :tasks
       resources :budget_items, only: [ :create, :update, :destroy ]

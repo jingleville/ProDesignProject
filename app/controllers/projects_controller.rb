@@ -2,14 +2,15 @@ class ProjectsController < ApplicationController
   before_action :set_project, only: [:show, :edit, :update, :destroy, :gantt]
 
   def index
-    @projects = policy_scope(Project).includes(:created_by, :tasks)
+    @projects = policy_scope(Project).includes(:creator, :tasks)
     @projects = @projects.where(status: params[:status]) if params[:status].present?
     @projects = @projects.order(created_at: :desc)
   end
 
   def show
     authorize @project
-    @tasks = @project.tasks.includes(:assignees, :created_by, :dependencies).order(:preliminary_start_at)
+    @stages = @project.stages.includes(tasks: [:assignee, :created_by])
+    @tasks  = @project.tasks.where(stage_id: nil).includes(:assignee, :created_by, :dependencies)
   end
 
   def new
@@ -18,7 +19,8 @@ class ProjectsController < ApplicationController
   end
 
   def create
-    @project = current_user.created_projects.build(project_params)
+    @project = Project.new(project_params)
+    @project.creator = current_user
     authorize @project
     if @project.save
       redirect_to @project, notice: "Проект успешно создан."
@@ -48,7 +50,7 @@ class ProjectsController < ApplicationController
 
   def gantt
     authorize @project, :show?
-    @tasks = @project.tasks.includes(:dependencies).order(:preliminary_start_at)
+    @tasks = @project.tasks.includes(:dependencies).order(:plan_start_at)
   end
 
   private

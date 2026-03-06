@@ -1,7 +1,15 @@
 class TaskDependency < ApplicationRecord
+  enum :dependency_type, {
+    finish_to_start: 0,
+    start_to_start: 1,
+    finish_to_finish: 2,
+    start_to_finish: 3
+  }
+
   belongs_to :task
   belongs_to :depends_on_task, class_name: "Task"
 
+  validates :dependency_type, presence: true
   validates :depends_on_task_id, uniqueness: { scope: :task_id }
   validate :no_self_dependency
   validate :no_circular_dependency
@@ -28,8 +36,8 @@ class TaskDependency < ApplicationRecord
         return
       end
 
-      TaskDependency.where(depends_on_task_id: current).pluck(:task_id).each do |dependent_id|
-        queue << dependent_id
+      TaskDependency.where(depends_on_task_id: current).pluck(:task_id).each do |dep_id|
+        queue << dep_id
       end
     end
   end

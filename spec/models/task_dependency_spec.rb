@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe TaskDependency, type: :model do
+  subject { create(:task_dependency) }
+
   describe "validations" do
     it { is_expected.to validate_presence_of(:dependency_type) }
     it { is_expected.to validate_uniqueness_of(:depends_on_task_id).scoped_to(:task_id) }

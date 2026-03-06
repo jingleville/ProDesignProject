@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_06_160641) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_06_172809) do
   create_table "audit_logs", force: :cascade do |t|
     t.string "auditable_type", null: false
     t.integer "auditable_id", null: false
@@ -49,8 +49,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_06_160641) do
   end
 
   create_table "comments", force: :cascade do |t|
-    t.string "commentable_type", null: false
-    t.integer "commentable_id", null: false
+    t.string "commentable_type"
+    t.integer "commentable_id"
     t.integer "user_id", null: false
     t.text "body"
     t.datetime "created_at", null: false
@@ -139,8 +139,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_06_160641) do
     t.integer "assignee_id"
     t.date "preliminary_start_at"
     t.date "preliminary_due_at"
-    t.date "approved_start_at"
-    t.date "approved_due_at"
+    t.datetime "approved_start_at"
+    t.datetime "approved_due_at"
     t.integer "status", default: 0, null: false
     t.datetime "completed_at"
     t.integer "approved_by_id"

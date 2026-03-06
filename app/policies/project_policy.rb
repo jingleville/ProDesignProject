@@ -1,14 +1,14 @@
 class ProjectPolicy < ApplicationPolicy
   def index?
-    true
+    !user.executor?
   end
 
   def show?
-    true
+    !user.executor?
   end
 
   def create?
-    user.project_manager? || user.sales_manager? || user.is_admin?
+    user.sales_manager? || user.project_manager? || user.is_admin?
   end
 
   def update?
@@ -20,15 +20,19 @@ class ProjectPolicy < ApplicationPolicy
     user.is_admin?
   end
 
+  def archive?
+    user.is_admin?
+  end
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       case user.role
-      when "production_manager", "director", "admin"
+      when "production_head", "director", "admin"
         scope.all
       when "project_manager", "sales_manager"
-        scope.where(created_by: user)
-      when "worker"
-        scope.joins(tasks: :task_assignees).where(task_assignees: { user_id: user.id }).distinct
+        scope.where(creator: user)
+      when "executor"
+        scope.joins(:tasks).where(tasks: { assignee_id: user.id }).distinct
       else
         scope.none
       end

@@ -8,24 +8,20 @@ class Project < ApplicationRecord
     archived: 3
   }
 
-  STATUS_TRANSLATIONS = {
-    "draft" => "Черновик",
-    "active" => "Активный",
-    "completed" => "Завершён",
-    "archived" => "В архиве"
-  }.freeze
+  belongs_to :creator, class_name: "User", foreign_key: :creator_id
 
-  belongs_to :created_by, class_name: "User", foreign_key: :creator_id
+  has_many :stages, -> { order(:position) }, dependent: :destroy
   has_many :tasks, dependent: :destroy
-  has_many :comments, as: :commentable, dependent: :destroy
-  has_many :audit_logs, as: :auditable, dependent: :destroy
+  has_many :estimate_items, dependent: :destroy
 
   validates :name, presence: true
 
   def check_completion!
     return unless active?
-    return if tasks.empty?
 
-    update!(status: :completed) if tasks.all?(&:completed?)
+    active_tasks = tasks.where.not(status: :cancelled)
+    return if active_tasks.empty?
+
+    update!(status: :completed) if active_tasks.all?(&:completed?)
   end
 end

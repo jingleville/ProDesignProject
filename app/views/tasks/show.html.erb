@@ -14,6 +14,9 @@
       <div class="mt-2 flex items-center space-x-4">
         <%= render partial: "tasks/status_badge", locals: { status: @task.status } %>
         <span class="text-sm text-gray-500">Автор: <%= @task.created_by.full_name %></span>
+        <% if @task.stage.present? %>
+          <span class="text-sm text-gray-500">Этап: <%= @task.stage.name %></span>
+        <% end %>
       </div>
     </div>
     <div class="flex space-x-2">
@@ -23,7 +26,7 @@
       <% if policy(@task).destroy? %>
         <%= button_to "Удалить", project_task_path(@project, @task), method: :delete,
               class: "bg-red-100 text-red-700 px-3 py-2 rounded-md hover:bg-red-200 text-sm",
-              data: { turbo_confirm: "Удалить задачу «#{@task.title}»? Это действие необратимо." } %>
+              data: { turbo_confirm: "Удалить задачу «#{@task.title}»?" } %>
       <% end %>
     </div>
   </div>
@@ -36,12 +39,8 @@
 
   <div class="mt-6 grid grid-cols-2 gap-4 text-sm">
     <div>
-      <span class="text-gray-500">Исполнители:</span>
-      <% if @task.assignees.any? %>
-        <span class="ml-2 font-medium"><%= @task.assignees.map(&:full_name).join(", ") %></span>
-      <% else %>
-        <span class="ml-2 font-medium text-gray-400">Не назначены</span>
-      <% end %>
+      <span class="text-gray-500">Исполнитель:</span>
+      <span class="ml-2 font-medium"><%= @task.assignee&.full_name || "Не назначен" %></span>
     </div>
     <div>
       <span class="text-gray-500">Согласовал:</span>
@@ -49,171 +48,73 @@
     </div>
     <div>
       <span class="text-gray-500">Плановые сроки:</span>
-      <span class="ml-2 font-medium"><%= @task.preliminary_start_at&.strftime("%d.%m.%Y") %> — <%= @task.preliminary_due_at&.strftime("%d.%m.%Y") %></span>
+      <span class="ml-2 font-medium">
+        <%= @task.plan_start_at&.strftime("%d.%m.%Y") || "—" %> — <%= @task.plan_due_at&.strftime("%d.%m.%Y") || "—" %>
+      </span>
     </div>
     <div>
       <span class="text-gray-500">Согласованные сроки:</span>
-      <span class="ml-2 font-medium"><%= @task.approved_start_at&.strftime("%d.%m.%Y") || "—" %> — <%= @task.approved_due_at&.strftime("%d.%m.%Y") || "—" %></span>
+      <span class="ml-2 font-medium">
+        <%= @task.approved_start_at&.strftime("%d.%m.%Y") || "—" %> — <%= @task.approved_due_at&.strftime("%d.%m.%Y") || "—" %>
+      </span>
     </div>
-    <% if @task.completed_at %>
+    <% if @task.actual_start_at.present? %>
       <div>
-        <span class="text-gray-500">Завершена:</span>
-        <span class="ml-2 font-medium"><%= @task.completed_at.strftime("%d.%m.%Y %H:%M") %></span>
+        <span class="text-gray-500">Фактическое начало:</span>
+        <span class="ml-2 font-medium"><%= @task.actual_start_at.strftime("%d.%m.%Y") %></span>
+      </div>
+    <% end %>
+    <% if @task.actual_due_at.present? %>
+      <div>
+        <span class="text-gray-500">Фактическое завершение:</span>
+        <span class="ml-2 font-medium"><%= @task.actual_due_at.strftime("%d.%m.%Y") %></span>
       </div>
     <% end %>
   </div>
-
-  <% if @task.parent_task.present? %>
-    <div class="mt-4 text-sm">
-      <span class="text-gray-500">Родительская задача:</span>
-      <%= link_to @task.parent_task.title, project_task_path(@project, @task.parent_task), class: "ml-2 text-indigo-600 hover:text-indigo-900 font-medium" %>
-    </div>
-  <% end %>
-
-  <% if @task.child_tasks.any? %>
-    <div class="mt-4">
-      <span class="text-sm text-gray-500 font-medium">Подзадачи:</span>
-      <div class="mt-1 flex flex-wrap gap-2">
-        <% @task.child_tasks.each do |child| %>
-          <%= link_to project_task_path(@project, child), class: "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium #{child.completed? ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}" do %>
-            <%= child.title %>
-            <span class="ml-1 opacity-70">(<%= Task::STATUS_TRANSLATIONS[child.status] %>)</span>
-          <% end %>
-        <% end %>
-      </div>
-    </div>
-  <% end %>
 
   <% if @task.dependencies.any? %>
     <div class="mt-4">
       <span class="text-sm text-gray-500">Зависимости:</span>
       <div class="mt-1 flex flex-wrap gap-2">
         <% @task.dependencies.each do |dep| %>
-          <%= link_to dep.title, project_task_path(@project, dep), class: "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium #{dep.completed? ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}" %>
+          <%= link_to dep.title, project_task_path(@project, dep),
+                class: "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium #{dep.completed? ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}" %>
         <% end %>
       </div>
     </div>
   <% end %>
 
   <div class="mt-6 flex flex-wrap gap-2 border-t pt-4">
-    <% if policy(@task).submit_for_approval? %>
-      <%= button_to "На согласование", submit_for_approval_project_task_path(@project, @task), method: :patch, class: "bg-yellow-500 text-white px-3 py-2 rounded-md hover:bg-yellow-600 text-sm" %>
+    <% if @task.draft? && policy(@task).update? %>
+      <%= button_to "На согласование", submit_for_approval_project_task_path(@project, @task), method: :patch,
+            class: "bg-yellow-500 text-white px-3 py-2 rounded-md hover:bg-yellow-600 text-sm" %>
     <% end %>
-    <% if policy(@task).approve? %>
-      <%= button_to "Согласовать", approve_project_task_path(@project, @task), method: :patch, class: "bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 text-sm" %>
+    <% if @task.awaiting_approval? && policy(@task).approve? %>
+      <%= button_to "Согласовать", approve_project_task_path(@project, @task), method: :patch,
+            class: "bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 text-sm" %>
+      <%= button_to "Отклонить", reject_project_task_path(@project, @task), method: :patch,
+            class: "bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 text-sm" %>
     <% end %>
-    <% if policy(@task).reject? %>
-      <%= button_to "Отклонить", reject_project_task_path(@project, @task), method: :patch, class: "bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 text-sm" %>
+    <% if @task.approved? && policy(@task).start? %>
+      <%= button_to "Начать", start_project_task_path(@project, @task), method: :patch,
+            class: "bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 text-sm" %>
     <% end %>
-    <% if policy(@task).start? %>
-      <%= button_to "Начать", start_project_task_path(@project, @task), method: :patch, class: "bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 text-sm" %>
+    <% if @task.in_progress? && policy(@task).complete? %>
+      <%= button_to "Отправить на подтверждение", complete_project_task_path(@project, @task), method: :patch,
+            class: "bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm" %>
     <% end %>
-    <% if policy(@task).complete? %>
-      <%= button_to "Завершить", complete_project_task_path(@project, @task), method: :patch, class: "bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 text-sm" %>
-    <% end %>
-    <% if policy(@task).assign? %>
-      <%= form_with(url: assign_project_task_path(@project, @task), method: :patch) do |f| %>
-        <div class="mt-2">
-          <span class="text-sm text-gray-700 font-medium block mb-1">Назначить исполнителей:</span>
-          <div class="space-y-1 max-h-40 overflow-y-auto border rounded-md p-2 bg-white">
-            <% User.all_workers.order(:last_name, :first_name).each do |worker| %>
-              <label class="flex items-center space-x-2">
-                <input type="checkbox" name="task[assignee_ids][]" value="<%= worker.id %>"
-                       <%= "checked" if @task.assignees.include?(worker) %>
-                       class="rounded border-gray-300 text-indigo-600">
-                <span class="text-sm"><%= worker.full_name %></span>
-              </label>
-            <% end %>
-          </div>
-          <input type="hidden" name="task[assignee_ids][]" value="">
-          <%= f.submit "Назначить", class: "mt-2 bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700 text-sm cursor-pointer" %>
-        </div>
-      <% end %>
+    <% if @task.pending_confirmation? && policy(@task).approve? %>
+      <%= button_to "Подтвердить завершение", confirm_completion_project_task_path(@project, @task), method: :patch,
+            class: "bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 text-sm" %>
     <% end %>
   </div>
 </div>
-
-<% if policy(@task).update? %>
-<div class="mt-8 bg-white shadow rounded-lg p-6">
-  <h2 class="text-lg font-semibold mb-4">Смета</h2>
-  <% if @task.budget_items.any? %>
-    <table class="min-w-full divide-y divide-gray-200 mb-4">
-      <thead class="bg-gray-50">
-        <tr>
-          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Материал</th>
-          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Формат</th>
-          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Кол-во</th>
-          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Цена</th>
-          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Итого</th>
-          <th class="px-4 py-2"></th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-200">
-        <% @task.budget_items.each do |item| %>
-          <tr>
-            <td class="px-4 py-2 text-sm"><%= item.material %></td>
-            <td class="px-4 py-2 text-sm text-gray-500"><%= item.format %></td>
-            <td class="px-4 py-2 text-sm"><%= item.quantity %></td>
-            <td class="px-4 py-2 text-sm"><%= item.price %></td>
-            <td class="px-4 py-2 text-sm font-medium"><%= "%.2f" % item.total %></td>
-            <td class="px-4 py-2">
-              <%= button_to "Удалить", project_task_budget_item_path(@project, @task, item), method: :delete,
-                    class: "text-red-600 hover:text-red-800 text-xs",
-                    data: { turbo_confirm: "Удалить позицию?" } %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-      <tfoot class="bg-gray-50">
-        <tr>
-          <td colspan="4" class="px-4 py-2 text-sm font-semibold text-right">Итого по смете:</td>
-          <td class="px-4 py-2 text-sm font-bold"><%= "%.2f" % @task.budget_items.sum(&:total) %></td>
-          <td></td>
-        </tr>
-      </tfoot>
-    </table>
-  <% else %>
-    <p class="text-gray-500 text-sm mb-4">Позиции сметы не добавлены.</p>
-  <% end %>
-
-  <div data-controller="budget" class="border-t pt-4">
-    <h3 class="text-sm font-medium text-gray-700 mb-2">Добавить позицию</h3>
-    <%= form_with url: project_task_budget_items_path(@project, @task), class: "flex flex-wrap gap-2 items-end" do |f| %>
-      <div>
-        <label class="block text-xs text-gray-500">Материал</label>
-        <%= f.text_field :material, name: "budget_item[material]", class: "block w-40 rounded-md border-gray-300 shadow-sm px-2 py-1 border text-sm" %>
-      </div>
-      <div>
-        <label class="block text-xs text-gray-500">Формат</label>
-        <%= f.text_field :format, name: "budget_item[format]", class: "block w-28 rounded-md border-gray-300 shadow-sm px-2 py-1 border text-sm" %>
-      </div>
-      <div>
-        <label class="block text-xs text-gray-500">Кол-во</label>
-        <%= f.number_field :quantity, name: "budget_item[quantity]", step: "0.01", min: 0,
-              data: { budget_target: "quantity", action: "input->budget#calculate" },
-              class: "block w-24 rounded-md border-gray-300 shadow-sm px-2 py-1 border text-sm" %>
-      </div>
-      <div>
-        <label class="block text-xs text-gray-500">Цена</label>
-        <%= f.number_field :price, name: "budget_item[price]", step: "0.01", min: 0,
-              data: { budget_target: "price", action: "input->budget#calculate" },
-              class: "block w-28 rounded-md border-gray-300 shadow-sm px-2 py-1 border text-sm" %>
-      </div>
-      <div>
-        <label class="block text-xs text-gray-500">Итого</label>
-        <span data-budget-target="total" class="block w-28 px-2 py-1 text-sm font-medium text-gray-700">0.00</span>
-      </div>
-      <%= f.submit "Добавить", class: "bg-indigo-600 text-white px-3 py-1 rounded-md hover:bg-indigo-700 text-sm cursor-pointer" %>
-    <% end %>
-  </div>
-</div>
-<% end %>
 
 <div class="mt-8">
   <h2 class="text-lg font-semibold mb-4">Комментарии</h2>
   <%= render partial: "comments/form", locals: { commentable: @task, url: project_task_comments_path(@project, @task) } %>
   <div class="mt-4 space-y-4">
-    <% @task.comments.includes(:user).order(created_at: :desc).each do |comment| %>
+    <% @comments.each do |comment| %>
       <%= render partial: "comments/comment", locals: { comment: comment } %>
     <% end %>
   </div>
@@ -227,11 +128,6 @@
         <span class="font-medium text-gray-700"><%= log.user.full_name %></span>
         <%= log.action %>
         <span class="text-xs"><%= log.created_at.strftime("%d.%m.%Y %H:%M") %></span>
-        <% if log.changed_data.present? %>
-          <span class="text-xs text-gray-400">
-            (<%= log.changed_data.map { |k, v| "#{k}: #{v[0]} → #{v[1]}" }.join(", ") %>)
-          </span>
-        <% end %>
       </div>
     <% end %>
   </div>

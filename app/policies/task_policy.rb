@@ -4,16 +4,8 @@ class TaskPolicy < ApplicationPolicy
   end
 
   def show?
-    case user.role
-    when "production_manager", "director", "admin"
-      true
-    when "project_manager", "sales_manager"
-      record.project.creator_id == user.id
-    when "worker"
-      record.assignees.include?(user)
-    else
-      false
-    end
+    user.is_admin? || user.production_head? || user.project_manager? ||
+      record.assignee == user
   end
 
   def create?
@@ -22,53 +14,34 @@ class TaskPolicy < ApplicationPolicy
 
   def update?
     user.is_admin? ||
-      user.production_manager? ||
-      (record.project.creator_id == user.id && (user.project_manager? || user.sales_manager?))
-  end
-
-  def destroy?
-    user.is_admin? || (user.project_manager? && record.project.creator_id == user.id)
-  end
-
-  def update_approved_dates?
-    user.production_manager? || user.is_admin?
-  end
-
-  def submit_for_approval?
-    return false unless record.draft? || record.rejected?
-    return true if user.is_admin?
-    (user.project_manager? || user.sales_manager?) && record.project.creator_id == user.id
+      (user.project_manager? && record.project.creator_id == user.id)
   end
 
   def approve?
-    (user.production_manager? || user.is_admin?) && record.awaiting_production_approval?
-  end
-
-  def reject?
-    (user.production_manager? || user.is_admin?) && record.awaiting_production_approval?
+    user.production_head? || user.is_admin?
   end
 
   def start?
-    record.assigned_to?(user) && record.approved? && record.dependencies_completed?
+    record.assignee == user
   end
 
   def complete?
-    (record.assigned_to?(user) || user.production_manager? || user.is_admin?) && record.in_progress?
+    record.assignee == user
   end
 
-  def assign?
-    user.production_manager? || user.is_admin?
+  def destroy?
+    user.is_admin?
   end
 
   class Scope < ApplicationPolicy::Scope
     def resolve
       case user.role
-      when "production_manager", "director", "admin"
+      when "production_head", "director", "admin"
         scope.all
       when "project_manager", "sales_manager"
         scope.joins(:project).where(projects: { creator_id: user.id })
-      when "worker"
-        scope.joins(:task_assignees).where(task_assignees: { user_id: user.id })
+      when "executor"
+        scope.where(assignee_id: user.id)
       else
         scope.none
       end
