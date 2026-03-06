@@ -12,9 +12,7 @@ Rails.application.routes.draw do
         patch :confirm_completion
       end
       resources :comments, only: [ :create, :destroy ], module: :tasks
-      resources :budget_items, only: [ :create, :update, :destroy ]
     end
-    resources :comments, only: [ :create, :destroy ], module: :projects
     get :gantt, on: :member
   end
 

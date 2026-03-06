@@ -9,8 +9,8 @@ class ProjectsController < ApplicationController
 
   def show
     authorize @project
-    @stages = @project.stages.includes(tasks: [:assignee, :created_by])
-    @tasks  = @project.tasks.where(stage_id: nil).includes(:assignee, :created_by, :dependencies)
+    @stages = @project.stages.includes(tasks: :assignee)
+    @tasks  = @project.tasks.where(stage_id: nil).includes(:assignee, :dependencies)
   end
 
   def new

@@ -5,7 +5,7 @@
       <span class="text-xs text-gray-500 ml-2"><%= comment.created_at.strftime("%d.%m.%Y %H:%M") %></span>
     </div>
     <% if policy(comment).destroy? %>
-      <%= button_to "Удалить", polymorphic_path([comment.commentable.is_a?(Task) ? comment.commentable.project : nil, comment.commentable, comment].compact), method: :delete, class: "text-xs text-red-500 hover:text-red-700", data: { turbo_confirm: "Вы уверены?" } %>
+      <%= button_to "Удалить", project_task_comment_path(comment.task.project, comment.task, comment), method: :delete, class: "text-xs text-red-500 hover:text-red-700", data: { turbo_confirm: "Вы уверены?" } %>
     <% end %>
   </div>
   <p class="mt-1 text-sm text-gray-700"><%= comment.body %></p>

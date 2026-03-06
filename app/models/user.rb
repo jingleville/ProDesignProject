@@ -20,8 +20,21 @@ class User < ApplicationRecord
   validates :first_name, :last_name, presence: true
   validates :role, presence: true
 
+  ROLE_TRANSLATIONS = {
+    "executor"         => "Исполнитель",
+    "sales_manager"    => "Менеджер по продажам",
+    "project_manager"  => "Менеджер проекта",
+    "production_head"  => "Руководитель производства",
+    "director"         => "Директор",
+    "admin"            => "Администратор"
+  }.freeze
+
   def full_name
     "#{first_name} #{last_name}"
+  end
+
+  def role_name
+    ROLE_TRANSLATIONS[role] || role
   end
 
   def is_admin?

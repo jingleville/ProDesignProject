@@ -13,7 +13,7 @@
       </h1>
       <div class="mt-2 flex items-center space-x-4">
         <%= render partial: "tasks/status_badge", locals: { status: @task.status } %>
-        <span class="text-sm text-gray-500">Автор: <%= @task.created_by.full_name %></span>
+        <span class="text-sm text-gray-500">Автор: <%= @task.created_by&.full_name || "—" %></span>
         <% if @task.stage.present? %>
           <span class="text-sm text-gray-500">Этап: <%= @task.stage.name %></span>
         <% end %>

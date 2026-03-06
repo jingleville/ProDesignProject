@@ -35,6 +35,20 @@ class NotificationService
     end
   end
 
+  def self.comment_added(comment, task, actor)
+    recipients = [ task.created_by, task.assignee ].compact.uniq - [ actor ]
+    recipients.each do |user|
+      notify(
+        user: user,
+        actor: actor,
+        event_type: "comment_added",
+        message: "Новый комментарий к задаче «#{task.title}»",
+        notifiable: task,
+        data: { task_id: task.id, comment_id: comment.id }
+      )
+    end
+  end
+
   def self.notify_project_completed(project:, actor:)
     recipients = [ project.creator ].compact.uniq - [ actor ]
     recipients.each do |user|
