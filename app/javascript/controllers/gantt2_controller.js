@@ -2,12 +2,13 @@ import { Controller } from "@hotwired/stimulus"
 
 const STATUS_COLORS = {
   draft: "#9ca3af",
-  awaiting_production_approval: "#f59e0b",
+  awaiting_approval: "#f59e0b",
   approved: "#6366f1",
   in_progress: "#3b82f6",
+  pending_confirmation: "#f97316",
   active: "#3b82f6",
   completed: "#22c55e",
-  rejected: "#ef4444",
+  cancelled: "#ef4444",
   archived: "#6b7280"
 }
 

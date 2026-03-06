@@ -57,7 +57,7 @@
                     <%= render partial: "tasks/status_badge", locals: { status: task.status } %>
                   </td>
                   <td class="px-4 py-3 text-sm text-gray-500">
-                    <%= task.assignees.map(&:full_name).join(", ").presence || "Не назначен" %>
+                    <%= task.assignee&.full_name || "Не назначен" %>
                   </td>
                 </tr>
               <% end %>

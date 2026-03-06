@@ -1,19 +1,14 @@
 class ProductionController < ApplicationController
   def index
     @tasks = policy_scope(Task)
-      .where(status: [:in_progress, :approved])
-      .where("approved_start_at <= ? OR preliminary_start_at <= ?", Date.current, Date.current)
-      .where.not(status: :completed)
-      .includes(:assignees, :project)
-      .order(:preliminary_start_at)
+      .where(status: [:approved, :in_progress, :pending_confirmation])
+      .includes(:assignee, :project)
+      .order(:plan_start_at)
 
     @grouped_tasks = {}
     @tasks.each do |task|
-      if task.assignees.any?
-        task.assignees.each { |a| (@grouped_tasks[a.full_name] ||= []) << task }
-      else
-        (@grouped_tasks["Не назначен"] ||= []) << task
-      end
+      key = task.assignee&.full_name || "Не назначен"
+      (@grouped_tasks[key] ||= []) << task
     end
     @grouped_tasks = @grouped_tasks.sort.to_h
   end

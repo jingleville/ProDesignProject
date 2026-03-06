@@ -22,25 +22,34 @@ class ApplicationController < ActionController::Base
 
     session[:deadline_check_at] = Time.current.to_s
 
-    tasks = Task.where.not(status: [:completed, :draft])
+    tasks = Task.where.not(status: [:completed, :cancelled, :draft])
       .where(
-        "COALESCE(approved_due_at, preliminary_due_at) BETWEEN ? AND ?",
+        "COALESCE(approved_due_at, plan_due_at) BETWEEN ? AND ?",
         Date.current, Date.current + 3.days
       )
-      .includes(:assignees)
+      .where.not(assignee_id: nil)
+      .includes(:assignee)
 
     tasks.each do |task|
-      days_left = (task.due_date - Date.current).to_i
-      assignees = task.assignees
-      next if assignees.empty?
+      days_left = (task.effective_due_date.to_date - Date.current).to_i
+      assignee = task.assignee
+      next unless assignee
 
-      already_notified_ids = Notification
-        .where(notifiable: task, event_type: :deadline_approaching)
+      already_notified = Notification
+        .where(notifiable: task, event_type: :deadline_approaching, user: assignee)
         .where("created_at > ?", 1.day.ago)
-        .pluck(:user_id)
+        .exists?
 
-      unnotified = assignees.reject { |u| already_notified_ids.include?(u.id) }
-      NotificationService.deadline_approaching(task, days_left) if unnotified.any?
+      unless already_notified
+        NotificationService.notify(
+          user: assignee,
+          actor: nil,
+          event_type: "deadline_approaching",
+          message: "Задача «#{task.title}» должна быть выполнена через #{days_left} дн.",
+          notifiable: task,
+          data: { task_id: task.id, days_left: days_left }
+        )
+      end
     end
   end
 
