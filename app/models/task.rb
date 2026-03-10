@@ -14,6 +14,7 @@ class Task < ApplicationRecord
   belongs_to :project
   belongs_to :created_by, class_name: "User"
   belongs_to :assignee, class_name: "User", optional: true
+  belongs_to :assigned_by, class_name: "User", optional: true
   belongs_to :approved_by, class_name: "User", optional: true
   belongs_to :stage, optional: true
 
@@ -23,6 +24,7 @@ class Task < ApplicationRecord
   has_many :change_logs, foreign_key: :entity_id, primary_key: :id
 
   validates :title, presence: true
+  validate :assignee_id_immutable, if: -> { persisted? && assignee_id_changed? && assignee_id_was.present? }
 
   after_update :check_project_completion, if: -> { saved_change_to_status? && completed? }
 
@@ -42,6 +44,10 @@ class Task < ApplicationRecord
   end
 
   private
+
+  def assignee_id_immutable
+    errors.add(:assignee_id, :immutable)
+  end
 
   def check_project_completion
     project.check_completion!

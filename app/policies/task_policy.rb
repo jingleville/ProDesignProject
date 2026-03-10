@@ -14,7 +14,7 @@ class TaskPolicy < ApplicationPolicy
 
   def update?
     user.is_admin? ||
-      (user.project_manager? && record.project.creator_id == user.id)
+      (user.project_manager? && record.created_by_id == user.id)
   end
 
   def approve?
@@ -22,7 +22,7 @@ class TaskPolicy < ApplicationPolicy
   end
 
   def start?
-    record.assignee == user
+    record.assignee == user || user.production_head?
   end
 
   def complete?

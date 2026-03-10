@@ -4,13 +4,12 @@ class TaskPlanner
   end
 
   def day_plan(executor)
-    base_scope(executor).where(approved_start_at: @date.beginning_of_day..@date.end_of_day)
+    base_scope(executor).where(approved_start_at: ..@date.end_of_day)
   end
 
   def week_plan(executor)
-    start_of_week = @date.beginning_of_week
-    end_of_week   = @date.end_of_week
-    base_scope(executor).where(approved_start_at: start_of_week..end_of_week)
+    end_of_week = @date.end_of_week
+    base_scope(executor).where(approved_start_at: ..end_of_week)
   end
 
   def production_overview

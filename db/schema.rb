@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_06_172809) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_10_000002) do
   create_table "audit_logs", force: :cascade do |t|
     t.string "auditable_type", null: false
     t.integer "auditable_id", null: false
@@ -69,6 +69,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_06_172809) do
     t.integer "project_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "unit"
+    t.text "note"
+    t.integer "position"
     t.index ["project_id"], name: "index_estimate_items_on_project_id"
   end
 
@@ -106,6 +109,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_06_172809) do
     t.integer "project_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "description"
     t.index ["project_id"], name: "index_stages_on_project_id"
   end
 

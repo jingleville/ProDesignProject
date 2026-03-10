@@ -38,6 +38,14 @@ class TaskApprovalService
     old_status = @task.status
     @task.update!(status: :draft)
     log_change("status", old_status, "draft: #{reason}")
+    NotificationService.notify(
+      user: @task.created_by,
+      actor: @approver,
+      event_type: "dates_rejected",
+      message: "Сроки задачи «#{@task.title}» отклонены",
+      notifiable: @task,
+      data: { task_id: @task.id, reason: reason }
+    )
   end
 
   private

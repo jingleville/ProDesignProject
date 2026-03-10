@@ -30,7 +30,7 @@ class ProjectPolicy < ApplicationPolicy
       when "production_head", "director", "admin"
         scope.all
       when "project_manager", "sales_manager"
-        scope.where(creator: user)
+        scope.where(creator: user).where.not(status: :archived)
       when "executor"
         scope.joins(:tasks).where(tasks: { assignee_id: user.id }).distinct
       else

@@ -1,5 +1,5 @@
 class ProductionOverviewQuery
-  ACTIVE_STATUSES = %w[draft awaiting_approval approved in_progress pending_confirmation].freeze
+  ACTIVE_STATUSES = %w[approved in_progress].freeze
 
   def initialize(threshold: 10)
     @threshold = threshold
