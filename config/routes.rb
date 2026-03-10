@@ -18,7 +18,9 @@ Rails.application.routes.draw do
   end
 
   namespace :admin do
-    resources :users, only: [ :index, :edit, :update ]
+    resources :users, only: [ :index, :edit, :update ] do
+      member { patch :fire }
+    end
   end
 
   get "planner/calendar", to: "planner#calendar", as: :planner_calendar

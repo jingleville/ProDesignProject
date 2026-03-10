@@ -3,7 +3,7 @@ class Admin::UsersController < ApplicationController
   # skip_after_action :verify_policy_scoped
 
   before_action :require_admin_or_director
-  before_action :set_user, only: [ :edit, :update ]
+  before_action :set_user, only: [ :edit, :update, :fire ]
 
   def index
     @users = policy_scope(User).order(:last_name, :first_name)
@@ -26,6 +26,12 @@ class Admin::UsersController < ApplicationController
     authorize @user
     @user.destroy
     redirect_to redirect_to admin_users_path, notice: "Пользователь удален."
+  end
+
+  def fire
+    authorize @user
+    @user.fire!
+    redirect_to admin_users_path, notice: "#{@user.full_name} уволен(а)."
   end
 
 

@@ -7,6 +7,10 @@ class UserPolicy < ApplicationPolicy
     user.is_admin? || user.director?
   end
 
+  def fire?
+    (user.is_admin? || user.director?) && record != user
+  end
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       scope.all

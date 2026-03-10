@@ -20,6 +20,7 @@
         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Задачи</th>
         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Автор</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Плановое окончание</th>
         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Создан</th>
       </tr>
     </thead>
@@ -37,6 +38,9 @@
           </td>
           <td class="px-6 py-4 text-sm text-gray-500">
             <%= project.creator.full_name %>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">
+            <%= project.planned_end_date&.strftime("%d.%m.%Y") || "—" %>
           </td>
           <td class="px-6 py-4 text-sm text-gray-500">
             <%= project.created_at.strftime("%d.%m.%Y") %>

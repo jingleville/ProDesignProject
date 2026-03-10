@@ -41,6 +41,14 @@ class User < ApplicationRecord
     admin? || director?
   end
 
+  def fired?
+    fired_at.present?
+  end
+
+  def fire!
+    update!(fired_at: Time.current)
+  end
+
   def self.executors
     where(role: :executor)
   end
