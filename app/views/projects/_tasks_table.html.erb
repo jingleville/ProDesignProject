@@ -34,15 +34,15 @@
             </td>
             <td class="px-6 py-4 text-right">
               <% if task.draft? && policy(task).update? %>
-                <%= button_to "На согласование",
+                <%= link_to "На согласование",
                       submit_for_approval_project_task_path(project, task),
-                      method: :patch,
+                      data: { turbo_method: :patch },
                       class: "bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600 whitespace-nowrap" %>
               <% end %>
               <% if task.awaiting_approval? && policy(task).approve? %>
-                <%= button_to "Согласовать",
+                <%= link_to "Согласовать",
                       approve_project_task_path(project, task),
-                      method: :patch,
+                      data: { turbo_method: :patch },
                       class: "bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700 whitespace-nowrap" %>
               <% end %>
             </td>
