@@ -7,8 +7,7 @@ class TaskApprovalService
   def approve
     @task.update!(
       status: :approved,
-      approved_by: @approver,
-      approved_at: Time.current
+      approved_by: @approver
     )
     log_change("status", @task.status_before_last_save, "approved")
     NotificationService.notify_task_status_changed(
@@ -21,8 +20,8 @@ class TaskApprovalService
 
   def counter_propose(start_at:, due_at:)
     @task.update!(
-      approved_start_at: start_at,
-      approved_due_at: due_at
+      plan_start_at: start_at,
+      plan_due_at: due_at
     )
     NotificationService.notify(
       user: @task.created_by,

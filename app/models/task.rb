@@ -31,12 +31,11 @@ class Task < ApplicationRecord
   def overdue?
     return false if completed? || cancelled?
 
-    due = approved_due_at || plan_due_at
-    due.present? && due < Date.current
+    plan_due_at.present? && plan_due_at < Date.current
   end
 
   def effective_due_date
-    approved_due_at || plan_due_at
+    plan_due_at
   end
 
   def dependencies_completed?

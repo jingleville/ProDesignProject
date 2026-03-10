@@ -27,12 +27,11 @@ RSpec.describe TaskStateMachine, type: :service do
       expect { machine.approve! }.to change { task.status }.to("approved")
     end
 
-    it "sets approved_by and approved_at when approved" do
+    it "sets approved_by when approved" do
       machine = described_class.new(task, actor: production_head)
       machine.approve!
 
       expect(task.approved_by).to eq(production_head)
-      expect(task.approved_at).to be_present
     end
 
     it "can be cancelled" do

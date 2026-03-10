@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_10_000004) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_10_182036) do
   create_table "audit_logs", force: :cascade do |t|
     t.string "auditable_type", null: false
     t.integer "auditable_id", null: false
@@ -142,10 +142,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_10_000004) do
     t.integer "created_by_id", null: false
     t.integer "assigned_by_id"
     t.integer "assignee_id"
-    t.date "preliminary_start_at"
-    t.date "preliminary_due_at"
-    t.datetime "approved_start_at"
-    t.datetime "approved_due_at"
     t.integer "status", default: 0, null: false
     t.datetime "completed_at"
     t.integer "approved_by_id"
@@ -157,7 +153,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_10_000004) do
     t.date "plan_due_at"
     t.datetime "actual_start_at"
     t.datetime "actual_due_at"
-    t.datetime "approved_at"
     t.index ["assignee_id"], name: "index_tasks_on_assignee_id"
     t.index ["created_by_id"], name: "index_tasks_on_created_by_id"
     t.index ["parent_task_id"], name: "index_tasks_on_parent_task_id"

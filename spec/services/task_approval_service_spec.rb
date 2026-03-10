@@ -21,13 +21,6 @@ RSpec.describe TaskApprovalService, type: :service do
       expect(task.approved_by).to eq(production_head)
     end
 
-    it "sets approved_at timestamp" do
-      service = described_class.new(task, approver: production_head)
-      service.approve
-
-      expect(task.approved_at).to be_present
-    end
-
     it "creates a change log entry" do
       service = described_class.new(task, approver: production_head)
       expect { service.approve }.to change(ChangeLog, :count).by(1)
@@ -42,15 +35,15 @@ RSpec.describe TaskApprovalService, type: :service do
   describe "#counter_propose" do
     let(:task) { create(:task, :awaiting_approval, plan_start_at: 3.days.from_now, plan_due_at: 10.days.from_now) }
 
-    it "sets new approved dates as counter-proposal" do
+    it "sets new plan dates as counter-proposal" do
       new_start = 5.days.from_now
       new_due = 15.days.from_now
 
       service = described_class.new(task, approver: production_head)
       service.counter_propose(start_at: new_start, due_at: new_due)
 
-      expect(task.approved_start_at).to be_within(1.second).of(new_start)
-      expect(task.approved_due_at).to be_within(1.second).of(new_due)
+      expect(task.plan_start_at.to_date).to eq(new_start.to_date)
+      expect(task.plan_due_at.to_date).to eq(new_due.to_date)
     end
 
     it "keeps task in awaiting_approval while counter-proposal is pending" do

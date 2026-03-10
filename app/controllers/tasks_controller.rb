@@ -103,9 +103,7 @@ class TasksController < ApplicationController
   end
 
   def task_params
-    base = [:title, :description, :plan_start_at, :plan_due_at, :assignee_id, :stage_id]
-    base += [:approved_start_at, :approved_due_at] if current_user.production_head? || current_user.is_admin?
-    params.require(:task).permit(*base)
+    params.require(:task).permit(:title, :description, :plan_start_at, :plan_due_at, :assignee_id, :stage_id)
   end
 
   def update_dependencies

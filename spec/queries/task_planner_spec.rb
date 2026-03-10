@@ -9,14 +9,14 @@ RSpec.describe TaskPlanner, type: :query do
       today_task = create(:task, :approved,
         project: project,
         assignee: executor,
-        approved_start_at: Date.current,
-        approved_due_at: Date.current + 3.days
+        plan_start_at: Date.current,
+        plan_due_at: Date.current + 3.days
       )
       future_task = create(:task, :approved,
         project: project,
         assignee: executor,
-        approved_start_at: 3.days.from_now,
-        approved_due_at: 7.days.from_now
+        plan_start_at: 3.days.from_now,
+        plan_due_at: 7.days.from_now
       )
 
       planner = described_class.new(date: Date.current)
@@ -31,8 +31,8 @@ RSpec.describe TaskPlanner, type: :query do
       other_task = create(:task, :approved,
         project: project,
         assignee: other_executor,
-        approved_start_at: Date.current,
-        approved_due_at: 3.days.from_now
+        plan_start_at: Date.current,
+        plan_due_at: 3.days.from_now
       )
 
       planner = described_class.new(date: Date.current)
@@ -47,14 +47,14 @@ RSpec.describe TaskPlanner, type: :query do
       week_task = create(:task, :approved,
         project: project,
         assignee: executor,
-        approved_start_at: Date.current,
-        approved_due_at: Date.current.end_of_week
+        plan_start_at: Date.current,
+        plan_due_at: Date.current.end_of_week
       )
       next_week_task = create(:task, :approved,
         project: project,
         assignee: executor,
-        approved_start_at: Date.current.next_week,
-        approved_due_at: Date.current.next_week + 5.days
+        plan_start_at: Date.current.next_week,
+        plan_due_at: Date.current.next_week + 5.days
       )
 
       planner = described_class.new(date: Date.current)

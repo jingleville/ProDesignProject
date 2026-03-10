@@ -44,16 +44,6 @@ RSpec.describe Task, type: :model do
       expect(task).to respond_to(:plan_due_at)
     end
 
-    it "responds to approved_start_at" do
-      task = build(:task)
-      expect(task).to respond_to(:approved_start_at)
-    end
-
-    it "responds to approved_due_at" do
-      task = build(:task)
-      expect(task).to respond_to(:approved_due_at)
-    end
-
     it "responds to actual_start_at" do
       task = build(:task)
       expect(task).to respond_to(:actual_start_at)
@@ -64,10 +54,6 @@ RSpec.describe Task, type: :model do
       expect(task).to respond_to(:actual_due_at)
     end
 
-    it "responds to approved_at" do
-      task = build(:task)
-      expect(task).to respond_to(:approved_at)
-    end
   end
 
   describe "#overdue?" do
@@ -76,43 +62,29 @@ RSpec.describe Task, type: :model do
       expect(task.overdue?).to be false
     end
 
-    it "returns true when approved_due_at is in the past and task is not complete" do
-      task = build(:task, :in_progress, approved_due_at: 1.day.ago, plan_due_at: nil)
+    it "returns true when plan_due_at is in the past" do
+      task = build(:task, :in_progress, plan_due_at: 1.day.ago)
       expect(task.overdue?).to be true
     end
 
-    it "returns true when plan_due_at is in the past and no approved_due_at" do
-      task = build(:task, :in_progress, plan_due_at: 1.day.ago, approved_due_at: nil)
-      expect(task.overdue?).to be true
-    end
-
-    it "returns false when due date is in the future" do
-      task = build(:task, :in_progress, plan_due_at: 5.days.from_now, approved_due_at: nil)
+    it "returns false when plan_due_at is in the future" do
+      task = build(:task, :in_progress, plan_due_at: 5.days.from_now)
       expect(task.overdue?).to be false
     end
   end
 
-  describe "#approved_by_id and approved_at" do
-    it "stores approval metadata" do
+  describe "#approved_by" do
+    it "stores approver" do
       approver = create(:user, :production_head)
-      task = create(:task, :approved, approved_by: approver, approved_at: Time.current)
+      task = create(:task, :approved, approved_by: approver)
 
       expect(task.approved_by).to eq(approver)
-      expect(task.approved_at).to be_present
     end
   end
 
   describe "#effective_due_date" do
-    it "prefers approved_due_at over plan_due_at" do
-      task = build(:task,
-        plan_due_at: 10.days.from_now,
-        approved_due_at: 5.days.from_now
-      )
-      expect(task.effective_due_date).to eq(task.approved_due_at)
-    end
-
-    it "falls back to plan_due_at when approved_due_at is nil" do
-      task = build(:task, plan_due_at: 10.days.from_now, approved_due_at: nil)
+    it "returns plan_due_at" do
+      task = build(:task, plan_due_at: 10.days.from_now)
       expect(task.effective_due_date).to eq(task.plan_due_at)
     end
   end

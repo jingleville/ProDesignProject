@@ -2,13 +2,13 @@
 
 <%
   gantt_items = @projects.filter_map do |project|
-    tasks = project.tasks.select { |t| t.plan_start_at.present? || t.approved_start_at.present? }
+    tasks = project.tasks.select { |t| t.plan_start_at.present? }
     next if tasks.empty?
 
     planned_starts = tasks.filter_map(&:plan_start_at)
     planned_ends   = tasks.filter_map(&:plan_due_at)
-    actual_starts  = tasks.filter_map(&:approved_start_at)
-    actual_ends    = tasks.filter_map(&:approved_due_at)
+    actual_starts  = tasks.filter_map(&:actual_start_at)
+    actual_ends    = tasks.filter_map(&:actual_due_at)
 
     completed = tasks.select(&:completed?).size
     total = tasks.size

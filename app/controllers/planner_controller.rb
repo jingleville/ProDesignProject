@@ -11,10 +11,7 @@ class PlannerController < ApplicationController
     end
 
     @tasks = policy_scope(Task)
-      .where(
-        "(approved_start_at <= ? AND approved_due_at >= ?) OR (plan_start_at <= ? AND plan_due_at >= ?)",
-        @date_range.last, @date_range.first, @date_range.last, @date_range.first
-      )
+      .where("plan_start_at <= ? AND plan_due_at >= ?", @date_range.last, @date_range.first)
       .includes(:project, :assignee)
       .order(:plan_start_at)
   end
@@ -24,11 +21,11 @@ class PlannerController < ApplicationController
     @days_ahead = (params[:days] || 30).to_i.clamp(7, 90)
     @tasks_by_date = policy_scope(Task)
       .where(
-        "COALESCE(approved_due_at, plan_due_at) BETWEEN ? AND ?",
+        "plan_due_at BETWEEN ? AND ?",
         Date.current, Date.current + @days_ahead.days
       )
       .includes(:project, :assignee)
-      .order(Arel.sql("COALESCE(approved_due_at, plan_due_at) ASC"))
+      .order(plan_due_at: :asc)
       .group_by { |t| t.effective_due_date&.to_date }
   end
 end

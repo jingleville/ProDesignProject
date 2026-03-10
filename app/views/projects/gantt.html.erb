@@ -5,15 +5,15 @@
 <h1 class="text-2xl font-bold mb-6">Диаграмма Ганта — <%= @project.name %></h1>
 
 <%
-  gantt_items = @tasks.select { |t| t.plan_start_at.present? || t.approved_start_at.present? }.map do |task|
+  gantt_items = @tasks.select { |t| t.plan_start_at.present? }.map do |task|
     {
       id: "task_#{task.id}",
       name: task.title,
       status: task.status,
       planned_start: task.plan_start_at&.strftime("%Y-%m-%d"),
       planned_end: task.plan_due_at&.strftime("%Y-%m-%d"),
-      actual_start: task.approved_start_at&.strftime("%Y-%m-%d"),
-      actual_end: task.approved_due_at&.strftime("%Y-%m-%d"),
+      actual_start: task.actual_start_at&.strftime("%Y-%m-%d"),
+      actual_end: task.actual_due_at&.strftime("%Y-%m-%d"),
       url: project_task_path(@project, task),
       progress: task.completed? ? 100 : (task.in_progress? ? 50 : 0)
     }

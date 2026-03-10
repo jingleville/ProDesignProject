@@ -52,12 +52,6 @@
         <%= @task.plan_start_at&.strftime("%d.%m.%Y") || "—" %> — <%= @task.plan_due_at&.strftime("%d.%m.%Y") || "—" %>
       </span>
     </div>
-    <div>
-      <span class="text-gray-500">Согласованные сроки:</span>
-      <span class="ml-2 font-medium">
-        <%= @task.approved_start_at&.strftime("%d.%m.%Y") || "—" %> — <%= @task.approved_due_at&.strftime("%d.%m.%Y") || "—" %>
-      </span>
-    </div>
     <% if @task.actual_start_at.present? %>
       <div>
         <span class="text-gray-500">Фактическое начало:</span>

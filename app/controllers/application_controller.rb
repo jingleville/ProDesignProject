@@ -24,7 +24,7 @@ class ApplicationController < ActionController::Base
 
     tasks = Task.where.not(status: [:completed, :cancelled, :draft])
       .where(
-        "COALESCE(approved_due_at, plan_due_at) BETWEEN ? AND ?",
+        "plan_due_at BETWEEN ? AND ?",
         Date.current, Date.current + 3.days
       )
       .where.not(assignee_id: nil)

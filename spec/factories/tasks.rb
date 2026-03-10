@@ -16,7 +16,6 @@ FactoryBot.define do
 
     trait :approved do
       status { :approved }
-      approved_at { Time.current }
       association :approved_by, factory: :user
     end
 
@@ -46,14 +45,8 @@ FactoryBot.define do
       plan_due_at { 7.days.from_now }
     end
 
-    trait :with_approved_dates do
-      approved_start_at { Date.current }
-      approved_due_at { 5.days.from_now }
-    end
-
     trait :overdue do
       plan_due_at { 3.days.ago }
-      approved_due_at { nil }
     end
   end
 end

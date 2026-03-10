@@ -21,7 +21,6 @@ class TaskStateMachine
   def approve!
     transition_to!("approved") do
       @task.approved_by = @actor
-      @task.approved_at = Time.current
     end
   end
 

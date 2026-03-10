@@ -49,7 +49,7 @@
             <td class="px-6 py-4">
               <%= render partial: "tasks/status_badge", locals: { status: task.status } %>
             </td>
-            <td class="px-6 py-4 text-sm text-gray-500"><%= task.approved_start_at || task.plan_start_at&.strftime("%d.%m.%Y") %></td>
+            <td class="px-6 py-4 text-sm text-gray-500"><%= task.plan_start_at&.strftime("%d.%m.%Y") %></td>
             <td class="px-6 py-4 text-sm text-gray-500"><%= task.effective_due_date&.strftime("%d.%m.%Y") %></td>
           </tr>
         <% end %>
