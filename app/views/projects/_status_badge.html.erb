@@ -15,3 +15,7 @@
 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= colors[status] || 'bg-gray-100 text-gray-800' %>">
   <%= labels[status] || status.humanize %>
 </span>
+
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= colors[status] || 'bg-gray-100 text-gray-800' %>">
+  <%= link_to labels[status] || status.humanize, projects_path(status: status), class: "px-3 py-1 rounded-md #{params[:status] == status ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+</span>
