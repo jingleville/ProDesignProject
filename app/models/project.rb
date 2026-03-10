@@ -31,4 +31,8 @@ class Project < ApplicationRecord
 
     update!(status: :completed) if active_tasks.all?(&:completed?)
   end
+
+  def planned_end_date
+    tasks.map(&:plan_due_at).max
+  end
 end
